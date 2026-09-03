@@ -1,0 +1,13 @@
+# Laravel
+backend/vendor/
+backend/.env
+backend/storage/logs/*
+backend/node_modules/
+
+# Android
+/mobile/.gradle/
+/mobile/.idea/
+/mobile/build/
+/mobile/app/build/
+/mobile/local.properties
+/mobile/.cxx/
