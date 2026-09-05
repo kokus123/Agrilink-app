@@ -2,10 +2,20 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome')->name('home');
+// Route "home" : requise par la vue de login (logo cliquable).
+// Redirige simplement vers la page de connexion pour l'instant.
+Route::redirect('/', '/login')->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::view('dashboard', 'dashboard')->name('dashboard');
-});
+// ============================================================
+// Routes Admin (AGRILINK)
+// ============================================================
+Route::middleware(['auth', 'role:admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
 
-require __DIR__.'/settings.php';
+        Route::livewire('/', 'admin.dashboard')->name('dashboard');
+        Route::livewire('/utilisateurs', 'admin.utilisateurs')->name('utilisateurs');
+        Route::livewire('/abonnements', 'admin.abonnements')->name('abonnements');
+        Route::livewire('/statistiques', 'admin.statistiques')->name('statistiques');
+    });

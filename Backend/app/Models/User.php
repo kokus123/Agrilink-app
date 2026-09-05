@@ -3,60 +3,110 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
-use Laravel\Fortify\Contracts\PasskeyUser;
-use Laravel\Fortify\PasskeyAuthenticatable;
-use Laravel\Fortify\TwoFactorAuthenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
-/**
- * @property int $id
- * @property string $name
- * @property string $email
- * @property Carbon|null $email_verified_at
- * @property string $password
- * @property string|null $two_factor_secret
- * @property string|null $two_factor_recovery_codes
- * @property Carbon|null $two_factor_confirmed_at
- * @property string|null $remember_token
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
- */
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable implements PasskeyUser
+class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+    use HasApiTokens, HasFactory, Notifiable;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    protected $fillable = [
+        'name',
+        'email',
+        'phone',
+        'password',
+        'role',
+        'is_active',
+        'is_subscribed',
+        'subscription_expires_at',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
+            'is_subscribed' => 'boolean',
+            'subscription_expires_at' => 'datetime',
         ];
     }
 
-    /**
-     * Get the user's initials
-     */
-    public function initials(): string
-    {
-        $initials = Str::initials($this->name, true);
+    // ---------- Relations ----------
 
-        return Str::length($initials) > 1
-            ? Str::substr($initials, 0, 1).Str::substr($initials, -1)
-            : $initials;
+    /** Produits publiés (si role = agriculteur) */
+    public function produits()
+    {
+        return $this->hasMany(Produit::class, 'agriculteur_id');
+    }
+
+    /** Commandes passées (si role = acheteur) */
+    public function commandes()
+    {
+        return $this->hasMany(Commande::class, 'acheteur_id');
+    }
+
+    /** Livraisons assignées (si role = transporteur) */
+    public function livraisons()
+    {
+        return $this->hasMany(Livraison::class, 'transporteur_id');
+    }
+
+    /** Paiements effectués */
+    public function paiements()
+    {
+        return $this->hasMany(Paiement::class);
+    }
+
+    /** Notations reçues (si role = agriculteur) */
+    public function notationsRecues()
+    {
+        return $this->hasMany(Notation::class, 'agriculteur_id');
+    }
+
+    /** Notations données (si role = acheteur) */
+    public function notationsDonnees()
+    {
+        return $this->hasMany(Notation::class, 'acheteur_id');
+    }
+
+    // ---------- Scopes utiles pour le dashboard admin ----------
+
+    public function scopeRole($query, string $role)
+    {
+        return $query->where('role', $role);
+    }
+
+    public function scopeActifs($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeBloques($query)
+    {
+        return $query->where('is_active', false);
+    }
+
+    public function scopeAbonnesPremium($query)
+    {
+        return $query->where('is_subscribed', true)
+            ->where(function ($q) {
+                $q->whereNull('subscription_expires_at')
+                  ->orWhere('subscription_expires_at', '>', now());
+            });
+    }
+
+    // ---------- Accessors ----------
+
+    public function getMoyenneNoteAttribute(): ?float
+    {
+        return round($this->notationsRecues()->avg('note') ?? 0, 1);
     }
 }
