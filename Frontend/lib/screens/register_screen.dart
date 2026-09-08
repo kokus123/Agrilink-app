@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../theme/app_theme.dart';
+import '../widgets/brand_logo.dart';
+import '../widgets/error_banner.dart';
+import '../widgets/modern_button.dart';
+import '../widgets/modern_text_field.dart';
+import '../widgets/role_selector_card.dart';
 import '../widgets/server_config_dialog.dart';
 import 'home_screen.dart';
 
@@ -55,8 +61,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Compte créé avec succès ! Bienvenue, ${authProvider.user?.name ?? ''}.'),
-          backgroundColor: Colors.green.shade700,
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle_rounded, color: Colors.white),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Compte créé avec succès ! Bienvenue, ${authProvider.user?.name ?? ''}.',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: AppColors.primary,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
       Navigator.pushAndRemoveUntil(
@@ -72,471 +91,360 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final authProvider = context.watch<AuthProvider>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAF9),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1B5E20)),
-          onPressed: () {
-            authProvider.clearErrors();
-            Navigator.pop(context);
-          },
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined, color: Color(0xFF1B5E20)),
-            tooltip: 'Configuration API',
-            onPressed: () => ServerConfigDialog.show(context),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Titre
-                const Text(
-                  'Créer un compte',
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1B5E20),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Rejoignez le réseau agricole Agrilink',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Sélection du rôle
-                const Text(
-                  'Je souhaite m\'inscrire en tant que :',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF2E3E33),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _RoleSelectionCard(
-                        title: 'Agriculteur',
-                        subtitle: 'Vendeur',
-                        icon: Icons.agriculture_rounded,
-                        isSelected: _selectedRole == 'agriculteur',
-                        onTap: () {
-                          setState(() {
-                            _selectedRole = 'agriculteur';
-                          });
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _RoleSelectionCard(
-                        title: 'Acheteur',
-                        subtitle: 'Client',
-                        icon: Icons.shopping_basket_rounded,
-                        isSelected: _selectedRole == 'acheteur',
-                        onTap: () {
-                          setState(() {
-                            _selectedRole = 'acheteur';
-                          });
-                        },
-                      ),
-                    ),
+      backgroundColor: AppColors.background,
+      body: Stack(
+        children: [
+          // Éléments de fond décoratifs
+          Positioned(
+            top: -100,
+            left: -80,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppColors.accent.withValues(alpha: 0.16),
+                    AppColors.accent.withValues(alpha: 0.0),
                   ],
                 ),
-                const SizedBox(height: 20),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 40,
+            right: -80,
+            child: Container(
+              width: 280,
+              height: 280,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppColors.primary.withValues(alpha: 0.12),
+                    AppColors.primary.withValues(alpha: 0.0),
+                  ],
+                ),
+              ),
+            ),
+          ),
 
-                // Affichage d'erreur globale
-                if (authProvider.errorMessage != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade50,
-                      border: Border.all(color: Colors.red.shade300),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          SafeArea(
+            child: Column(
+              children: [
+                // En-tête
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.inputBorder),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.arrow_back_rounded,
+                              color: AppColors.textPrimary),
+                          onPressed: () {
+                            authProvider.clearErrors();
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ),
+                      const Text(
+                        'Créer un compte',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.tune_rounded, color: AppColors.primary),
+                        tooltip: 'Configuration API',
+                        onPressed: () => ServerConfigDialog.show(context),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Formulaire d'inscription
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0, vertical: 12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Icon(Icons.error_outline,
-                            color: Colors.red.shade700, size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            authProvider.errorMessage!,
-                            style: TextStyle(
-                              color: Colors.red.shade900,
-                              fontSize: 13,
+                        // Petit rappel du logo
+                        const Center(
+                          child: Hero(
+                            tag: 'agrilink_logo',
+                            child: BrandLogo(
+                              size: 72,
+                              showText: false,
                             ),
                           ),
                         ),
+                        const SizedBox(height: 12),
+                        const Center(
+                          child: Text(
+                            'Rejoignez la communauté AgriLink',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Sélection du type de profil (Agriculteur vs Acheteur)
+                        const Text(
+                          'Vous êtes :',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            RoleSelectorCard(
+                              title: 'Agriculteur',
+                              badgeText: 'Vendeur',
+                              description: 'Je propose et vends mes récoltes',
+                              icon: Icons.agriculture_rounded,
+                              isSelected: _selectedRole == 'agriculteur',
+                              onTap: () {
+                                setState(() {
+                                  _selectedRole = 'agriculteur';
+                                });
+                              },
+                            ),
+                            const SizedBox(width: 12),
+                            RoleSelectorCard(
+                              title: 'Acheteur',
+                              badgeText: 'Client',
+                              description: 'J\'achète des produits locaux',
+                              icon: Icons.shopping_bag_rounded,
+                              isSelected: _selectedRole == 'acheteur',
+                              onTap: () {
+                                setState(() {
+                                  _selectedRole = 'acheteur';
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Formulaire card
+                        Container(
+                          padding: const EdgeInsets.all(24.0),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(28),
+                            border: Border.all(
+                              color: AppColors.inputBorder.withValues(alpha: 0.8),
+                              width: 1.2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withValues(alpha: 0.06),
+                                blurRadius: 24,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // Bannière d'erreur API
+                                if (authProvider.errorMessage != null)
+                                  ErrorBanner(
+                                    message: authProvider.errorMessage!,
+                                    onDismiss: () => authProvider.clearErrors(),
+                                  ),
+
+                                // Nom complet
+                                ModernTextField(
+                                  controller: _nameController,
+                                  label: 'Nom complet',
+                                  hintText: 'ex: Paul Biya',
+                                  prefixIcon: Icons.person_outline_rounded,
+                                  textInputAction: TextInputAction.next,
+                                  errorText: authProvider.getFieldError('name'),
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return 'Veuillez saisir votre nom';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 16),
+
+                                // Email
+                                ModernTextField(
+                                  controller: _emailController,
+                                  label: 'Adresse email',
+                                  hintText: 'exemple@agrilink.cm',
+                                  prefixIcon: Icons.alternate_email_rounded,
+                                  keyboardType: TextInputType.emailAddress,
+                                  textInputAction: TextInputAction.next,
+                                  errorText: authProvider.getFieldError('email'),
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return 'Veuillez saisir votre email';
+                                    }
+                                    if (!value.contains('@') || !value.contains('.')) {
+                                      return 'Adresse email invalide';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 16),
+
+                                // Téléphone
+                                ModernTextField(
+                                  controller: _phoneController,
+                                  label: 'Numéro de téléphone (optionnel)',
+                                  hintText: '+237 6XX XX XX XX',
+                                  prefixIcon: Icons.phone_outlined,
+                                  keyboardType: TextInputType.phone,
+                                  textInputAction: TextInputAction.next,
+                                  errorText: authProvider.getFieldError('phone'),
+                                ),
+                                const SizedBox(height: 16),
+
+                                // Mot de passe
+                                ModernTextField(
+                                  controller: _passwordController,
+                                  label: 'Mot de passe',
+                                  hintText: '8 caractères minimum',
+                                  prefixIcon: Icons.lock_outline_rounded,
+                                  obscureText: _obscurePassword,
+                                  textInputAction: TextInputAction.next,
+                                  errorText: authProvider.getFieldError('password'),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _obscurePassword
+                                          ? Icons.visibility_outlined
+                                          : Icons.visibility_off_outlined,
+                                      color: AppColors.textSecondary,
+                                      size: 20,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _obscurePassword = !_obscurePassword;
+                                      });
+                                    },
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Veuillez définir un mot de passe';
+                                    }
+                                    if (value.length < 8) {
+                                      return 'Au moins 8 caractères requis';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 16),
+
+                                // Confirmation mot de passe
+                                ModernTextField(
+                                  controller: _passwordConfirmController,
+                                  label: 'Confirmer le mot de passe',
+                                  hintText: 'Répétez votre mot de passe',
+                                  prefixIcon: Icons.lock_clock_outlined,
+                                  obscureText: _obscureConfirmPassword,
+                                  textInputAction: TextInputAction.done,
+                                  onFieldSubmitted: (_) => _handleRegister(),
+                                  errorText: authProvider
+                                      .getFieldError('password_confirmation'),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _obscureConfirmPassword
+                                          ? Icons.visibility_outlined
+                                          : Icons.visibility_off_outlined,
+                                      color: AppColors.textSecondary,
+                                      size: 20,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _obscureConfirmPassword =
+                                            !_obscureConfirmPassword;
+                                      });
+                                    },
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Veuillez confirmer votre mot de passe';
+                                    }
+                                    if (value != _passwordController.text) {
+                                      return 'Les mots de passe ne correspondent pas';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 24),
+
+                                // Bouton d'inscription
+                                ModernButton(
+                                  text: 'Créer mon compte',
+                                  icon: Icons.person_add_rounded,
+                                  isLoading: authProvider.isLoading,
+                                  onPressed: _handleRegister,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 22),
+
+                        // Redirection Connexion
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Vous avez déjà un compte ? ',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 14,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                authProvider.clearErrors();
+                                Navigator.pop(context);
+                              },
+                              child: const Text(
+                                'Se connecter',
+                                style: TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
-                ],
-
-                // Champ Nom complet
-                TextFormField(
-                  controller: _nameController,
-                  textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(
-                    labelText: 'Nom complet',
-                    hintText: 'ex: Jean Eboué',
-                    prefixIcon: const Icon(Icons.person_outline),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Color(0xFF1B5E20),
-                        width: 2,
-                      ),
-                    ),
-                    errorText: authProvider.getFieldError('name'),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Veuillez renseigner votre nom complet';
-                    }
-                    return null;
-                  },
                 ),
-                const SizedBox(height: 14),
-
-                // Champ Email
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(
-                    labelText: 'Adresse email',
-                    hintText: 'exemple@agrilink.cm',
-                    prefixIcon: const Icon(Icons.email_outlined),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Color(0xFF1B5E20),
-                        width: 2,
-                      ),
-                    ),
-                    errorText: authProvider.getFieldError('email'),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Veuillez saisir votre email';
-                    }
-                    if (!value.contains('@') || !value.contains('.')) {
-                      return 'Veuillez saisir un email valide';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 14),
-
-                // Champ Téléphone (optionnel)
-                TextFormField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(
-                    labelText: 'Téléphone (optionnel)',
-                    hintText: '+237 6XX XX XX XX',
-                    prefixIcon: const Icon(Icons.phone_outlined),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Color(0xFF1B5E20),
-                        width: 2,
-                      ),
-                    ),
-                    errorText: authProvider.getFieldError('phone'),
-                  ),
-                ),
-                const SizedBox(height: 14),
-
-                // Mot de passe
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(
-                    labelText: 'Mot de passe',
-                    hintText: '8 caractères minimum',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Color(0xFF1B5E20),
-                        width: 2,
-                      ),
-                    ),
-                    errorText: authProvider.getFieldError('password'),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veuillez définir un mot de passe';
-                    }
-                    if (value.length < 8) {
-                      return 'Le mot de passe doit comporter au moins 8 caractères';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 14),
-
-                // Confirmation mot de passe
-                TextFormField(
-                  controller: _passwordConfirmController,
-                  obscureText: _obscureConfirmPassword,
-                  textInputAction: TextInputAction.done,
-                  onFieldSubmitted: (_) => _handleRegister(),
-                  decoration: InputDecoration(
-                    labelText: 'Confirmer le mot de passe',
-                    prefixIcon: const Icon(Icons.lock_clock_outlined),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureConfirmPassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscureConfirmPassword = !_obscureConfirmPassword;
-                        });
-                      },
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Color(0xFF1B5E20),
-                        width: 2,
-                      ),
-                    ),
-                    errorText:
-                        authProvider.getFieldError('password_confirmation'),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veuillez confirmer votre mot de passe';
-                    }
-                    if (value != _passwordController.text) {
-                      return 'Les deux mots de passe ne correspondent pas';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-
-                // Bouton Créer mon compte
-                SizedBox(
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed:
-                        authProvider.isLoading ? null : _handleRegister,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1B5E20),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 2,
-                    ),
-                    child: authProvider.isLoading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                        : const Text(
-                            'Créer mon compte',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // Lien vers connexion
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Vous avez déjà un compte ? ',
-                      style: TextStyle(color: Colors.grey.shade700),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        authProvider.clearErrors();
-                        Navigator.pop(context);
-                      },
-                      child: const Text(
-                        'Se connecter',
-                        style: TextStyle(
-                          color: Color(0xFF1B5E20),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RoleSelectionCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _RoleSelectionCard({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFE8F5E9) : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? const Color(0xFF1B5E20) : Colors.grey.shade300,
-            width: isSelected ? 2 : 1,
-          ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Colors.green.withValues(alpha: 0.15),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ]
-              : [],
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              size: 28,
-              color: isSelected ? const Color(0xFF1B5E20) : Colors.grey.shade600,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color:
-                    isSelected ? const Color(0xFF1B5E20) : Colors.grey.shade800,
-              ),
-            ),
-            Text(
-              subtitle,
-              style: TextStyle(
-                fontSize: 11,
-                color: Colors.grey.shade600,
-              ),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
