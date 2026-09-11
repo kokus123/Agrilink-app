@@ -14,6 +14,13 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    // Registers POST /api/broadcasting/auth, protected by Sanctum instead of the
+    // default web/session guard — required since the Flutter client authenticates
+    // with a Sanctum token, not a cookie.
+    ->withBroadcasting(
+        __DIR__.'/../routes/channels.php',
+        attributes: ['prefix' => 'api', 'middleware' => ['auth:sanctum']],
+    )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'role' => EnsureUserHasRole::class,

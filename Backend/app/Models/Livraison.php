@@ -36,4 +36,10 @@ class Livraison extends Model
     {
         return $this->belongsTo(User::class, 'transporteur_id');
     }
+
+    /** Chat acheteur <-> transporteur pendant la livraison */
+    public function messages()
+    {
+        return $this->hasMany(Message::class);
+    }
 }

@@ -30,4 +30,16 @@ class LivraisonPolicy
     {
         return $user->role === 'transporteur' && $livraison->transporteur_id === null;
     }
+
+    /**
+     * Chat de livraison ("Notifier transporteur" du diagramme) :
+     * l'acheteur de la commande OU le transporteur assigné.
+     * Volontairement séparé de view() : view() ne doit pas s'ouvrir à
+     * l'acheteur, sinon il accéderait aussi à positionAcheteur() par ricochet.
+     */
+    public function chat(User $user, Livraison $livraison): bool
+    {
+        return $user->id === $livraison->transporteur_id
+            || $user->id === $livraison->commande->acheteur_id;
+    }
 }
