@@ -21,6 +21,9 @@ class User extends Authenticatable
         'is_active',
         'is_subscribed',
         'subscription_expires_at',
+        'latitude',
+        'longitude',
+        'position_updated_at',
     ];
 
     protected $hidden = [
@@ -36,6 +39,7 @@ class User extends Authenticatable
             'is_active' => 'boolean',
             'is_subscribed' => 'boolean',
             'subscription_expires_at' => 'datetime',
+            'position_updated_at' => 'datetime',
         ];
     }
 
