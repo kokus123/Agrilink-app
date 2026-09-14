@@ -8,6 +8,8 @@ class RoleSelectorCard extends StatelessWidget {
   final IconData icon;
   final bool isSelected;
   final VoidCallback onTap;
+  final Color fillColor;
+  final Color accentColor;
 
   const RoleSelectorCard({
     super.key,
@@ -17,6 +19,8 @@ class RoleSelectorCard extends StatelessWidget {
     required this.icon,
     required this.isSelected,
     required this.onTap,
+    this.fillColor = AppColors.successBg,
+    this.accentColor = AppColors.success,
   });
 
   @override
@@ -24,97 +28,66 @@ class RoleSelectorCard extends StatelessWidget {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeInOut,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.white : AppColors.inputBg,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: isSelected ? AppColors.accent : AppColors.inputBorder,
-              width: isSelected ? 2 : 1.2,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 200),
+          opacity: isSelected ? 1.0 : 0.55,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeInOut,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: fillColor,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isSelected ? accentColor : accentColor.withValues(alpha: 0.3),
+                width: isSelected ? 2 : 1.2,
+              ),
             ),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: AppColors.accent.withValues(alpha: 0.18),
-                      blurRadius: 14,
-                      offset: const Offset(0, 5),
-                    ),
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.08),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : [],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppColors.primary.withValues(alpha: 0.1)
-                          : Colors.black.withValues(alpha: 0.04),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      icon,
-                      color: isSelected
-                          ? AppColors.primary
-                          : AppColors.textSecondary,
-                      size: 24,
-                    ),
-                  ),
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 20,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      color: isSelected ? AppColors.accent : Colors.transparent,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isSelected
-                            ? AppColors.accent
-                            : AppColors.textMuted.withValues(alpha: 0.5),
-                        width: 1.5,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: accentColor.withValues(alpha: 0.18),
+                        shape: BoxShape.circle,
                       ),
+                      child: Icon(icon, color: accentColor, size: 22),
                     ),
-                    child: isSelected
-                        ? const Icon(
-                            Icons.check,
-                            color: Colors.white,
-                            size: 13,
-                          )
-                        : null,
+                    if (isSelected)
+                      Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(color: accentColor, shape: BoxShape.circle),
+                        child: const Icon(Icons.check, color: Colors.white, size: 13),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  badgeText.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: accentColor,
+                    letterSpacing: 0.6,
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  color: isSelected ? AppColors.primary : AppColors.textPrimary,
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                description,
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
+                const SizedBox(height: 3),
+                Text(
+                  title,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
                 ),
-              ),
-            ],
+                const SizedBox(height: 3),
+                Text(
+                  description,
+                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
           ),
         ),
       ),

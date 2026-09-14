@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\CommandeController;
 use App\Http\Controllers\Api\LivraisonController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\NotationController;
+use App\Http\Controllers\Api\PaiementController;
+use App\Http\Controllers\Api\PaiementWebhookController;
 use App\Http\Controllers\Api\PositionController;
 use App\Http\Controllers\Api\ProduitController;
 use Illuminate\Support\Facades\Route;
@@ -21,23 +23,27 @@ use Illuminate\Support\Facades\Route;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-// Catalogue produits : visible même par un visiteur non connecté
 Route::get('/produits', [ProduitController::class, 'index']);
 Route::get('/produits/{produit}', [ProduitController::class, 'show']);
 
-// Fiche agriculteur : notes/avis visibles publiquement
 Route::get('/agriculteurs/{agriculteur}/notations', [NotationController::class, 'index']);
 
-// --- Routes protégées (nécessitent un token Sanctum valide) ---
+Route::post('/webhooks/notchpay', [PaiementWebhookController::class, 'handle']);
+
+// --- Routes protégées ---
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+
+    Route::post('/paiements/{paiement}/payer', [PaiementController::class, 'payer']);
 
     // --- Acheteur uniquement ---
     Route::middleware('role.api:acheteur')->group(function () {
         Route::get('/commandes', [CommandeController::class, 'index']);
         Route::post('/commandes', [CommandeController::class, 'store']);
         Route::get('/commandes/{commande}', [CommandeController::class, 'show']);
+        Route::patch('/commandes/{commande}', [CommandeController::class, 'update']);
+        Route::delete('/commandes/{commande}', [CommandeController::class, 'destroy']);
 
         Route::post('/notations', [NotationController::class, 'store']);
     });
@@ -66,11 +72,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/livraisons/{livraison}/position-acheteur', [LivraisonController::class, 'positionAcheteur']);
     });
 
-    // --- Acheteur ET Transporteur (partage de position + chat de livraison) ---
+    // --- Acheteur ET Transporteur ---
     Route::middleware('role.api:acheteur,transporteur')->group(function () {
         Route::post('/position', [PositionController::class, 'update']);
 
-        // Chat en direct pendant la livraison (remplace "Notifier transporteur")
         Route::get('/livraisons/{livraison}/messages', [MessageController::class, 'index']);
         Route::post('/livraisons/{livraison}/messages', [MessageController::class, 'store']);
     });

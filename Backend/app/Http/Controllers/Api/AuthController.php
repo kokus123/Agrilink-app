@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\LoginRequest;
 use App\Http\Requests\Api\RegisterRequest;
+use App\Http\Requests\Api\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -67,12 +68,9 @@ class AuthController extends Controller
 
     /**
      * POST /api/logout
-     * Protégée par le middleware 'auth:sanctum'
      */
     public function logout(Request $request)
     {
-        // Révoque uniquement le token utilisé pour cette requête
-        // (l'utilisateur reste connecté sur ses autres appareils)
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
@@ -82,10 +80,37 @@ class AuthController extends Controller
 
     /**
      * GET /api/me
-     * Protégée par le middleware 'auth:sanctum'
      */
     public function me(Request $request)
     {
         return new UserResource($request->user());
+    }
+
+    /**
+     * PATCH /api/me
+     * "Gérer son profil" — commun aux 4 rôles. Le changement de mot de passe
+     * est optionnel et nécessite le mot de passe actuel.
+     */
+    public function updateProfile(UpdateProfileRequest $request)
+    {
+        $user = $request->user();
+        $validated = $request->validated();
+
+        if ($request->filled('password')) {
+            if (! Hash::check($validated['current_password'], $user->password)) {
+                throw ValidationException::withMessages([
+                    'current_password' => ['Mot de passe actuel incorrect.'],
+                ]);
+            }
+            $user->password = Hash::make($validated['password']);
+        }
+
+        $user->fill(collect($validated)->only(['name', 'phone', 'email'])->toArray());
+        $user->save();
+
+        return response()->json([
+            'message' => 'Profil mis à jour.',
+            'user' => new UserResource($user),
+        ]);
     }
 }

@@ -22,7 +22,9 @@ class UpdateProduitRequest extends FormRequest
             'prix' => ['sometimes', 'required', 'numeric', 'min:0'],
             'quantite_disponible' => ['sometimes', 'required', 'integer', 'min:0'],
             'statut' => ['sometimes', 'in:disponible,rupture,archive'],
-            'image' => ['nullable', 'string'],
+            // Vrai fichier envoyé en multipart/form-data (max 4 Mo, jpg/png/webp).
+            // Absent du form => on garde l'image existante (voir contrôleur).
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ];
     }
 }

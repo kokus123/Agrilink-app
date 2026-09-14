@@ -4,6 +4,8 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>AgriLink a besoin de ta position pour la partager avec le transporteur pendant la livraison</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

@@ -4,10 +4,38 @@ import '../config/api_config.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/server_config_dialog.dart';
+import 'acheteur/acheteur_shell_screen.dart';
+import 'agriculteur/agriculteur_shell_screen.dart';
 import 'login_screen.dart';
 
+/// Point d'entrée post-connexion : redirige vers l'espace dédié au rôle.
+/// Agriculteur et Acheteur ont leur propre espace — les autres rôles
+/// (transporteur, admin) retombent sur l'écran de profil générique en
+/// attendant leur propre bloc.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final user = context.watch<AuthProvider>().user;
+
+    if (user != null && user.isAgriculteur) {
+      return const AgriculteurShellScreen();
+    }
+
+    if (user != null && user.isAcheteur) {
+      return const AcheteurShellScreen();
+    }
+
+    return const GenericProfileScreen();
+  }
+}
+
+/// Écran de profil générique — utilisé comme repli pour les rôles sans
+/// espace dédié, et réutilisé tel quel comme onglet "Profil" de
+/// AcheteurShellScreen (public pour être importable ailleurs).
+class GenericProfileScreen extends StatelessWidget {
+  const GenericProfileScreen({super.key});
 
   Future<void> _handleLogout(BuildContext context) async {
     final confirm = await showDialog<bool>(
@@ -72,7 +100,7 @@ class HomeScreen extends StatelessWidget {
               width: 32,
               height: 32,
               fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => const Icon(
+              errorBuilder: (_, _, _) => const Icon(
                 Icons.eco_rounded,
                 color: AppColors.accent,
               ),

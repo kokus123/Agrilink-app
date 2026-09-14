@@ -19,7 +19,8 @@ class StoreProduitRequest extends FormRequest
             'categorie' => ['nullable', 'string', 'max:100'],
             'prix' => ['required', 'numeric', 'min:0'],
             'quantite_disponible' => ['required', 'integer', 'min:0'],
-            'image' => ['nullable', 'string'], // URL ou chemin, upload géré séparément si besoin
+            // Vrai fichier envoyé en multipart/form-data (max 4 Mo, jpg/png/webp).
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ];
     }
 }

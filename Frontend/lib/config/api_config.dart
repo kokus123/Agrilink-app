@@ -31,9 +31,41 @@ class ApiConfig {
     _baseUrl = clean;
   }
 
-  /// Endpoints
+  /// Endpoints — Authentification
   static String get registerUrl => '$_baseUrl/register';
   static String get loginUrl => '$_baseUrl/login';
   static String get logoutUrl => '$_baseUrl/logout';
   static String get meUrl => '$_baseUrl/me';
+
+  /// Endpoints — Espace Agriculteur
+  static String get mesProduitsUrl => '$_baseUrl/mes-produits';
+  static String get mesCommandesUrl => '$_baseUrl/mes-commandes';
+  static String notifierTransporteurUrl(int commandeId) =>
+      '$_baseUrl/commandes/$commandeId/notifier-transporteur';
+  static String get abonnementSouscrireUrl => '$_baseUrl/abonnement/souscrire';
+  static String get abonnementStatutUrl => '$_baseUrl/abonnement/statut';
+  static String get simulerRevenusUrl => '$_baseUrl/simuler-revenus';
+  static String get predictionPrixUrl => '$_baseUrl/prediction-prix';
+
+  /// Endpoints — Espace Acheteur
+  static String get produitsUrl => '$_baseUrl/produits';
+  static String produitDetailUrl(int produitId) => '$_baseUrl/produits/$produitId';
+  static String get commandesUrl => '$_baseUrl/commandes';
+  static String commandeDetailUrl(int commandeId) => '$_baseUrl/commandes/$commandeId';
+
+  /// Endpoints — Notation ("Noter agriculteur")
+  static String get notationsUrl => '$_baseUrl/notations';
+  static String agriculteurNotationsUrl(int agriculteurId) =>
+      '$_baseUrl/agriculteurs/$agriculteurId/notations';
+
+  /// Endpoints — Position ("Partager position", commun acheteur/transporteur)
+  static String get positionUrl => '$_baseUrl/position';
+
+  /// Endpoints — Chat de livraison (commun acheteur/transporteur)
+  static String livraisonMessagesUrl(int livraisonId) =>
+      '$_baseUrl/livraisons/$livraisonId/messages';
+
+  /// Endpoints — Paiement (abonnement premium uniquement)
+  static String payerPaiementUrl(int paiementId) =>
+      '$_baseUrl/paiements/$paiementId/payer';
 }

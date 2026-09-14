@@ -137,6 +137,129 @@ class ApiService {
     }
   }
 
+  /// Requête PATCH (mise à jour partielle — utilisé pour modifier un produit)
+  Future<Map<String, dynamic>> patch(
+    String url, {
+    Map<String, dynamic>? body,
+    bool requiresAuth = false,
+  }) async {
+    try {
+      final uri = Uri.parse(url);
+      final headers = await _buildHeaders(requiresAuth: requiresAuth);
+      final encodedBody = body != null ? jsonEncode(body) : null;
+
+      final response = await _client
+          .patch(uri, headers: headers, body: encodedBody)
+          .timeout(timeoutDuration);
+
+      return _processResponse(response);
+    } on SocketException catch (e) {
+      throw ApiException(
+        message:
+            'Impossible de contacter le serveur ($url).\n(${e.message})',
+      );
+    } on TimeoutException {
+      throw ApiException(
+        message: 'Le serveur met trop de temps à répondre (Timeout).',
+      );
+    } on http.ClientException catch (e) {
+      throw ApiException(
+        message: 'Erreur réseau client : ${e.message}',
+      );
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(message: 'Une erreur inattendue est survenue : $e');
+    }
+  }
+
+  /// Requête DELETE
+  Future<Map<String, dynamic>> delete(
+    String url, {
+    bool requiresAuth = false,
+  }) async {
+    try {
+      final uri = Uri.parse(url);
+      final headers = await _buildHeaders(requiresAuth: requiresAuth);
+
+      final response = await _client
+          .delete(uri, headers: headers)
+          .timeout(timeoutDuration);
+
+      return _processResponse(response);
+    } on SocketException catch (e) {
+      throw ApiException(
+        message:
+            'Impossible de contacter le serveur ($url).\n(${e.message})',
+      );
+    } on TimeoutException {
+      throw ApiException(
+        message: 'Le serveur met trop de temps à répondre (Timeout).',
+      );
+    } on http.ClientException catch (e) {
+      throw ApiException(
+        message: 'Erreur réseau client : ${e.message}',
+      );
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(message: 'Une erreur inattendue est survenue : $e');
+    }
+  }
+
+  /// Requête multipart/form-data (upload de fichier, ex: photo produit).
+  ///
+  /// Laravel ne lit les fichiers ($_FILES) que sur de vraies requêtes HTTP
+  /// POST — pour simuler un PATCH avec fichier, on envoie donc un POST
+  /// avec un champ `_method=PATCH` (mécanisme standard de Laravel pour les
+  /// formulaires HTML/multipart, qui ne savent faire que GET/POST).
+  Future<Map<String, dynamic>> multipart(
+    String url, {
+    required String method, // 'POST' ou 'PATCH'
+    Map<String, String>? fields,
+    File? file,
+    String fileFieldName = 'image',
+    bool requiresAuth = false,
+  }) async {
+    try {
+      final uri = Uri.parse(url);
+      final request = http.MultipartRequest('POST', uri);
+
+      final headers = await _buildHeaders(requiresAuth: requiresAuth);
+      headers.remove('Content-Type'); // fixé automatiquement par MultipartRequest
+      request.headers.addAll(headers);
+
+      final allFields = {...?fields};
+      if (method.toUpperCase() == 'PATCH') {
+        allFields['_method'] = 'PATCH';
+      }
+      request.fields.addAll(allFields);
+
+      if (file != null) {
+        request.files.add(await http.MultipartFile.fromPath(fileFieldName, file.path));
+      }
+
+      final streamedResponse = await request.send().timeout(timeoutDuration);
+      final response = await http.Response.fromStream(streamedResponse);
+
+      return _processResponse(response);
+    } on SocketException catch (e) {
+      throw ApiException(
+        message:
+            'Impossible de contacter le serveur ($url).\n(${e.message})',
+      );
+    } on TimeoutException {
+      throw ApiException(
+        message: 'Le serveur met trop de temps à répondre (Timeout).',
+      );
+    } on http.ClientException catch (e) {
+      throw ApiException(
+        message: 'Erreur réseau client : ${e.message}',
+      );
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(message: 'Une erreur inattendue est survenue : $e');
+    }
+  }
+
   /// Traitement des codes de réponse HTTP et du JSON
   Map<String, dynamic> _processResponse(http.Response response) {
     Map<String, dynamic> body = {};
@@ -202,6 +325,14 @@ class ApiService {
       throw ApiException(
         message: 'Ressource introuvable sur le serveur (404).',
         statusCode: 404,
+      );
+    }
+
+    // Gestion 409 Conflict (ex : livraison déjà prise en charge, paiement déjà traité)
+    if (response.statusCode == 409) {
+      throw ApiException(
+        message: body['message'] as String? ?? 'Conflit : action déjà effectuée.',
+        statusCode: 409,
       );
     }
 
