@@ -32,10 +32,33 @@ class LivraisonPolicy
     }
 
     /**
+     * Accepter/refuser une proposition : uniquement le transporteur à qui
+     * elle a été proposée (transporteur_id la pointe déjà vers lui tant
+     * qu'elle est au statut 'proposee').
+     */
+    public function accepter(User $user, Livraison $livraison): bool
+    {
+        return $user->id === $livraison->transporteur_id;
+    }
+
+    public function refuser(User $user, Livraison $livraison): bool
+    {
+        return $user->id === $livraison->transporteur_id;
+    }
+
+    /**
+     * Consulter la position du transporteur (carte temps réel côté
+     * Acheteur) : uniquement l'acheteur propriétaire de la commande liée.
+     * Volontairement séparé de view() (réservé au transporteur).
+     */
+    public function consulterPositionTransporteur(User $user, Livraison $livraison): bool
+    {
+        return $user->id === $livraison->commande->acheteur_id;
+    }
+
+    /**
      * Chat de livraison ("Notifier transporteur" du diagramme) :
      * l'acheteur de la commande OU le transporteur assigné.
-     * Volontairement séparé de view() : view() ne doit pas s'ouvrir à
-     * l'acheteur, sinon il accéderait aussi à positionAcheteur() par ricochet.
      */
     public function chat(User $user, Livraison $livraison): bool
     {

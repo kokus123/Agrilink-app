@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateProduitRequest extends FormRequest
 {
@@ -18,9 +19,10 @@ class UpdateProduitRequest extends FormRequest
         return [
             'nom' => ['sometimes', 'required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'categorie' => ['nullable', 'string', 'max:100'],
-            'prix' => ['sometimes', 'required', 'numeric', 'min:0'],
+            'categorie' => ['nullable', 'string', Rule::in(StoreProduitRequest::CATEGORIES)],
+            'prix' => ['sometimes', 'required', 'integer', 'min:0'],
             'quantite_disponible' => ['sometimes', 'required', 'integer', 'min:0'],
+            'unite' => ['sometimes', 'required', 'string', Rule::in(StoreProduitRequest::UNITES)],
             'statut' => ['sometimes', 'in:disponible,rupture,archive'],
             // Vrai fichier envoyé en multipart/form-data (max 4 Mo, jpg/png/webp).
             // Absent du form => on garde l'image existante (voir contrôleur).

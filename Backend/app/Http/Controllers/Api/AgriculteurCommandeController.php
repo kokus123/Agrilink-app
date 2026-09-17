@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\CommandeResource;
 use App\Models\Commande;
 use App\Models\Livraison;
+use App\Services\LivraisonMatchingService;
 use Illuminate\Http\Request;
 
 class AgriculteurCommandeController extends Controller
@@ -30,7 +31,12 @@ class AgriculteurCommandeController extends Controller
 
     /**
      * PATCH /api/commandes/{commande}/notifier-transporteur
-     * Crée (ou confirme) la demande de livraison, visible ensuite par les transporteurs disponibles.
+     *
+     * Crée la livraison puis tente de la proposer immédiatement au
+     * transporteur disponible le plus proche (LivraisonMatchingService).
+     * Si aucun n'est disponible, elle reste 'en_attente' — visible dans
+     * le pool ouvert (GET /livraisons/disponibles) comme filet de
+     * sécurité, un transporteur pourra toujours la prendre manuellement.
      */
     public function notifierTransporteur(Request $request, Commande $commande)
     {
@@ -43,10 +49,18 @@ class AgriculteurCommandeController extends Controller
 
         $commande->update(['statut' => 'confirmee']);
 
-        // TODO : notification push réelle aux transporteurs (FCM) une fois configurée côté Flutter
+        if ($livraison->statut === 'en_attente' && $livraison->transporteur_id === null) {
+            $candidat = (new LivraisonMatchingService())->trouverProchainTransporteur($livraison);
+
+            if ($candidat) {
+                $livraison->update(['transporteur_id' => $candidat->id, 'statut' => 'proposee']);
+            }
+        }
 
         return response()->json([
-            'message' => 'Transporteur notifié, en attente de prise en charge.',
+            'message' => $livraison->fresh()->statut === 'proposee'
+                ? 'Transporteur notifié — une proposition a été envoyée.'
+                : 'Transporteur notifié — aucun transporteur disponible pour le moment, en attente.',
             'livraison_id' => $livraison->id,
         ]);
     }

@@ -16,14 +16,14 @@ class ProduitResource extends JsonResource
             'categorie' => $this->categorie,
             'prix' => (float) $this->prix,
             'quantite_disponible' => $this->quantite_disponible,
-            // URL publique complète (ex: http://ton-domaine/storage/produits/xxx.jpg),
-            // construite à partir du chemin relatif stocké en base.
-            'image' => $this->image ? asset('storage/'.$this->image) : null,
+            'unite' => $this->unite,
+            'image' => $this->image ? url('/api/media/'.$this->image) : null,
             'statut' => $this->statut,
             'agriculteur' => [
                 'id' => $this->agriculteur->id,
                 'name' => $this->agriculteur->name,
                 'moyenne_note' => $this->agriculteur->moyenne_note,
+                'is_subscribed' => (bool) $this->agriculteur->is_subscribed,
             ],
             'created_at' => $this->created_at,
         ];

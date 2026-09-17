@@ -128,6 +128,8 @@ class _LigneArticle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final unite = item.produit.unite;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -138,7 +140,9 @@ class _LigneArticle extends StatelessWidget {
               children: [
                 Text(item.produit.nom, style: const TextStyle(fontWeight: FontWeight.w600)),
                 Text(
-                  '${item.produit.prix.toStringAsFixed(0)} FCFA / unité',
+                  unite != null && unite.isNotEmpty
+                      ? '${item.produit.prix.toStringAsFixed(0)} FCFA / $unite'
+                      : '${item.produit.prix.toStringAsFixed(0)} FCFA / unité',
                   style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                 ),
               ],
@@ -148,7 +152,14 @@ class _LigneArticle extends StatelessWidget {
             icon: const Icon(Icons.remove_circle_outline, size: 20),
             onPressed: () => context.read<CartProvider>().modifierQuantite(item.produit.id, item.quantite - 1),
           ),
-          Text('${item.quantite}', style: const TextStyle(fontWeight: FontWeight.w700)),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('${item.quantite}', style: const TextStyle(fontWeight: FontWeight.w700)),
+              if (unite != null && unite.isNotEmpty)
+                Text(unite, style: const TextStyle(fontSize: 10, color: AppColors.textMuted)),
+            ],
+          ),
           IconButton(
             icon: const Icon(Icons.add_circle_outline, size: 20),
             onPressed: () => context.read<CartProvider>().modifierQuantite(item.produit.id, item.quantite + 1),

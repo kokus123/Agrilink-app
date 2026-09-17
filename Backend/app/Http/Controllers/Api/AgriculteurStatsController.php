@@ -4,62 +4,168 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Produit;
+use App\Services\GeminiService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AgriculteurStatsController extends Controller
 {
     /**
      * GET /api/simuler-revenus
-     * Estimation basée sur le stock actuel valorisé au prix de vente.
-     * (Calcul simple pour l'instant — pourra être remplacé par un vrai modèle
-     * prenant l'historique de vente, une fois l'Assistant IA branché — voir Phase 4.)
+     *
+     * Envoie le stock réel de l'agriculteur (nom, catégorie, prix, quantité
+     * disponible) à Gemini, qui estime le revenu potentiel et un revenu
+     * réaliste, avec une explication en français destinée à un agriculteur
+     * non technique.
      */
     public function simulerRevenus(Request $request)
     {
-        $produits = $request->user()->produits()->where('statut', 'disponible')->get();
+        $produits = $request->user()
+            ->produits()
+            ->where('statut', 'disponible')
+            ->get(['nom', 'categorie', 'prix', 'quantite_disponible']);
 
-        $revenuPotentiel = $produits->sum(fn ($p) => $p->prix * $p->quantite_disponible);
+        if ($produits->isEmpty()) {
+            return response()->json([
+                'revenu_potentiel_stock_actuel' => 0,
+                'revenu_reel_estime' => 0,
+                'nombre_produits_actifs' => 0,
+                'explication' => "Aucun produit disponible pour l'instant — ajoute des produits à ton catalogue pour voir une simulation.",
+            ]);
+        }
 
-        // Revenus réels des 3 derniers mois, pour comparaison
-        $revenuReel3Mois = DB::table('commande_produit')
-            ->join('produits', 'commande_produit.produit_id', '=', 'produits.id')
-            ->join('commandes', 'commande_produit.commande_id', '=', 'commandes.id')
-            ->where('produits.agriculteur_id', $request->user()->id)
-            ->where('commandes.statut', 'livree')
-            ->where('commandes.created_at', '>=', now()->subMonths(3))
-            ->sum(DB::raw('commande_produit.quantite * commande_produit.prix_unitaire'));
+        $stockJson = $produits->map(fn ($p) => [
+            'nom' => $p->nom,
+            'categorie' => $p->categorie,
+            'prix_fcfa' => (float) $p->prix,
+            'quantite_disponible' => (float) $p->quantite_disponible,
+        ])->toJson(JSON_UNESCAPED_UNICODE);
 
-        return response()->json([
-            'revenu_potentiel_stock_actuel' => (float) $revenuPotentiel,
-            'revenu_reel_3_derniers_mois' => (float) $revenuReel3Mois,
-            'nombre_produits_actifs' => $produits->count(),
-        ]);
+        $prompt = <<<PROMPT
+Tu es un assistant spécialisé dans l'agriculture et le commerce de produits vivriers au Cameroun.
+
+Un agriculteur vend ses produits sur AgriLink, une plateforme de mise en relation directe entre agriculteurs et acheteurs. Voici son stock actuel disponible à la vente :
+
+{$stockJson}
+
+En te basant sur les prix affichés et sur ta connaissance des prix courants du marché camerounais pour ce type de produits, estime :
+1. revenu_potentiel_stock_actuel : le revenu total si absolument tout le stock listé est vendu au prix affiché
+2. revenu_reel_estime : un revenu réaliste probable, en tenant compte du marché, de la saisonnalité et du risque d'invendus
+3. explication : 2 à 3 phrases en français, simples et concrètes, destinées à un agriculteur non technique, expliquant ton estimation
+
+Réponds uniquement avec les champs demandés.
+PROMPT;
+
+        $schema = [
+            'type' => 'OBJECT',
+            'properties' => [
+                'revenu_potentiel_stock_actuel' => ['type' => 'NUMBER'],
+                'revenu_reel_estime' => ['type' => 'NUMBER'],
+                'explication' => ['type' => 'STRING'],
+            ],
+            'required' => ['revenu_potentiel_stock_actuel', 'revenu_reel_estime', 'explication'],
+        ];
+
+        try {
+            $gemini = new GeminiService(config('services.gemini.api_key'));
+            $resultat = $gemini->genererJson($prompt, $schema);
+
+            return response()->json([
+                'revenu_potentiel_stock_actuel' => $resultat['revenu_potentiel_stock_actuel'],
+                'revenu_reel_estime' => $resultat['revenu_reel_estime'],
+                'nombre_produits_actifs' => $produits->count(),
+                'explication' => $resultat['explication'],
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Gemini simulerRevenus a échoué', ['error' => $e->getMessage()]);
+
+            return response()->json([
+                'message' => "L'assistant IA n'a pas pu générer d'estimation pour le moment. Réessaie dans un instant.",
+            ], 503);
+        }
     }
 
     /**
-     * GET /api/prediction-prix?categorie=Légumes
-     * Version simple : moyenne des prix du marché sur la catégorie.
-     * À remplacer par l'appel réel à l'Assistant IA externe (Phase 4).
+     * GET /api/prediction-prix?categorie=...
+     *
+     * Envoie à Gemini les prix actuellement pratiqués par TOUS les
+     * agriculteurs de la plateforme pour cette catégorie (prix de marché,
+     * pas seulement ceux de l'agriculteur connecté), et demande une
+     * prédiction pour la semaine à venir.
      */
     public function predictionPrix(Request $request)
     {
-        $request->validate([
-            'categorie' => ['required', 'string'],
+        $validated = $request->validate([
+            'categorie' => ['required', 'string', 'max:100'],
         ]);
 
-        $stats = Produit::where('categorie', $request->categorie)
+        $categorie = $validated['categorie'];
+
+        $prix = Produit::where('categorie', $categorie)
             ->where('statut', 'disponible')
-            ->selectRaw('AVG(prix) as prix_moyen, MIN(prix) as prix_min, MAX(prix) as prix_max, COUNT(*) as nb_produits')
-            ->first();
+            ->pluck('prix');
 
-        return response()->json([
-            'categorie' => $request->categorie,
-            'prix_moyen_marche' => round((float) $stats->prix_moyen, 2),
-            'prix_min' => (float) $stats->prix_min,
-            'prix_max' => (float) $stats->prix_max,
-            'echantillon' => (int) $stats->nb_produits,
-            'note' => "Estimation basée sur les prix actuels du marché. Un modèle IA plus avancé sera branché ultérieurement.",
-        ]);
+        if ($prix->isEmpty()) {
+            return response()->json([
+                'categorie' => $categorie,
+                'prix_moyen_marche' => 0,
+                'prix_min' => 0,
+                'prix_max' => 0,
+                'tendance' => 'inconnue',
+                'echantillon' => 0,
+                'note' => "Aucun produit de cette catégorie n'est actuellement en vente sur la plateforme — pas assez de données pour une prédiction.",
+            ]);
+        }
+
+        $prixJson = $prix->map(fn ($p) => (float) $p)->toJson();
+
+        $prompt = <<<PROMPT
+Tu es un assistant spécialisé dans les prix des produits agricoles au Cameroun.
+
+Sur AgriLink (plateforme camerounaise de vente directe producteur-acheteur), voici les prix actuellement pratiqués (en FCFA) par les agriculteurs pour la catégorie "{$categorie}" :
+
+{$prixJson}
+
+En te basant sur ces prix et sur les tendances saisonnières typiques du marché camerounais pour ce type de produits, prédis pour la semaine à venir :
+1. prix_moyen_marche : le prix moyen probable
+2. prix_min et prix_max : la fourchette attendue
+3. tendance : "hausse", "stable" ou "baisse"
+4. note : 2 à 3 phrases en français expliquant simplement cette prédiction à un agriculteur
+
+Réponds uniquement avec les champs demandés.
+PROMPT;
+
+        $schema = [
+            'type' => 'OBJECT',
+            'properties' => [
+                'prix_moyen_marche' => ['type' => 'NUMBER'],
+                'prix_min' => ['type' => 'NUMBER'],
+                'prix_max' => ['type' => 'NUMBER'],
+                'tendance' => ['type' => 'STRING'],
+                'note' => ['type' => 'STRING'],
+            ],
+            'required' => ['prix_moyen_marche', 'prix_min', 'prix_max', 'tendance', 'note'],
+        ];
+
+        try {
+            $gemini = new GeminiService(config('services.gemini.api_key'));
+            $resultat = $gemini->genererJson($prompt, $schema);
+
+            return response()->json([
+                'categorie' => $categorie,
+                'prix_moyen_marche' => $resultat['prix_moyen_marche'],
+                'prix_min' => $resultat['prix_min'],
+                'prix_max' => $resultat['prix_max'],
+                'tendance' => $resultat['tendance'],
+                'echantillon' => $prix->count(),
+                'note' => $resultat['note'],
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Gemini predictionPrix a échoué', ['error' => $e->getMessage()]);
+
+            return response()->json([
+                'message' => "L'assistant IA n'a pas pu générer de prédiction pour le moment. Réessaie dans un instant.",
+            ], 503);
+        }
     }
 }

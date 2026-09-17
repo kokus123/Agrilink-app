@@ -42,4 +42,10 @@ class Livraison extends Model
     {
         return $this->hasMany(Message::class);
     }
+
+    /** Transporteurs ayant refusé cette livraison (pour le matching) */
+    public function refus()
+    {
+        return $this->hasMany(LivraisonRefus::class);
+    }
 }

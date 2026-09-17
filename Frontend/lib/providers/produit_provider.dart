@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import '../models/produit_model.dart';
 import '../services/api_service.dart';
@@ -10,10 +10,15 @@ class ProduitProvider extends ChangeNotifier {
   List<ProduitModel> _produits = [];
   bool _isLoading = false;
   String? _errorMessage;
+  bool _limitePremiumAtteinte = false;
 
   List<ProduitModel> get produits => _produits;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  /// True quand la dernière tentative de création a échoué parce que le
+  /// forfait gratuit (2 produits max) est atteint — l'écran doit alors
+  /// proposer un lien vers l'abonnement plutôt qu'une simple erreur.
+  bool get limitePremiumAtteinte => _limitePremiumAtteinte;
 
   Future<void> charger() async {
     _isLoading = true;
@@ -38,9 +43,11 @@ class ProduitProvider extends ChangeNotifier {
     String? categorie,
     required double prix,
     required int quantiteDisponible,
-    File? image,
+    required String unite,
+    XFile? image,
   }) async {
     _errorMessage = null;
+    _limitePremiumAtteinte = false;
     try {
       final produit = await _service.creer(
         nom: nom,
@@ -48,6 +55,7 @@ class ProduitProvider extends ChangeNotifier {
         categorie: categorie,
         prix: prix,
         quantiteDisponible: quantiteDisponible,
+        unite: unite,
         image: image,
       );
       _produits.insert(0, produit);
@@ -55,6 +63,7 @@ class ProduitProvider extends ChangeNotifier {
       return true;
     } on ApiException catch (e) {
       _errorMessage = e.userFriendlyMessage;
+      _limitePremiumAtteinte = e.statusCode == 403 && e.body?['limite_atteinte'] == true;
       notifyListeners();
       return false;
     }
@@ -67,8 +76,9 @@ class ProduitProvider extends ChangeNotifier {
     String? categorie,
     required double prix,
     required int quantiteDisponible,
+    required String unite,
     required String statut,
-    File? image,
+    XFile? image,
   }) async {
     _errorMessage = null;
     try {
@@ -79,6 +89,7 @@ class ProduitProvider extends ChangeNotifier {
         categorie: categorie,
         prix: prix,
         quantiteDisponible: quantiteDisponible,
+        unite: unite,
         statut: statut,
         image: image,
       );

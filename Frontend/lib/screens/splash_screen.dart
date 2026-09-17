@@ -4,7 +4,7 @@ import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/brand_logo.dart';
 import 'home_screen.dart';
-import 'login_screen.dart';
+import 'onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -39,9 +39,11 @@ class _SplashScreenState extends State<SplashScreen> {
         MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
     } else {
+      // Visiteur non connecté : passe par l'onboarding (3 slides) avant
+      // Login, à chaque lancement — pas de mémorisation "déjà vu".
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        MaterialPageRoute(builder: (_) => const OnboardingScreen()),
       );
     }
   }

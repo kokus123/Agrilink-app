@@ -7,9 +7,13 @@ import '../widgets/error_banner.dart';
 import '../widgets/flat_action_button.dart';
 import '../widgets/modern_text_field.dart';
 import '../widgets/role_selector_card.dart';
-import '../widgets/server_config_dialog.dart';
 import '../widgets/social_login_button.dart';
 import 'home_screen.dart';
+
+/// Vert tiré de l'illustration register_screen.png — même teinte que
+/// login_screen.dart (même illustration), pour que le bouton reste
+/// cohérent avec l'image au-dessus.
+const _kCouleurIllustration = Color(0xFF4CBB6C);
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -134,11 +138,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         color: Colors.white,
                         shape: BoxShape.circle,
                         border: Border.all(color: AppColors.inputBorder),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.tune_rounded, color: AppColors.primary, size: 20),
-                        tooltip: 'Configuration API',
-                        onPressed: () => ServerConfigDialog.show(context),
                       ),
                     ),
                   ],
@@ -342,6 +341,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   text: 'Créer mon compte',
                   isLoading: authProvider.isLoading,
                   onPressed: _handleRegister,
+                  color: _kCouleurIllustration,
                 ),
                 const SizedBox(height: 24),
 

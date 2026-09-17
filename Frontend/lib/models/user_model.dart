@@ -3,6 +3,7 @@ class UserModel {
   final String name;
   final String email;
   final String? phone;
+  final String? photo;
   final String role;
   final bool isActive;
   final bool isSubscribed;
@@ -14,6 +15,7 @@ class UserModel {
     required this.name,
     required this.email,
     this.phone,
+    this.photo,
     required this.role,
     this.isActive = true,
     this.isSubscribed = false,
@@ -54,6 +56,7 @@ class UserModel {
       name: json['name'] as String? ?? '',
       email: json['email'] as String? ?? '',
       phone: json['phone'] as String?,
+      photo: json['photo'] as String?,
       role: json['role'] as String? ?? 'acheteur',
       isActive: json['is_active'] is bool
           ? json['is_active'] as bool
@@ -76,6 +79,7 @@ class UserModel {
       'name': name,
       'email': email,
       'phone': phone,
+      'photo': photo,
       'role': role,
       'is_active': isActive,
       'is_subscribed': isSubscribed,
@@ -89,6 +93,7 @@ class UserModel {
     String? name,
     String? email,
     String? phone,
+    String? photo,
     String? role,
     bool? isActive,
     bool? isSubscribed,
@@ -100,6 +105,7 @@ class UserModel {
       name: name ?? this.name,
       email: email ?? this.email,
       phone: phone ?? this.phone,
+      photo: photo ?? this.photo,
       role: role ?? this.role,
       isActive: isActive ?? this.isActive,
       isSubscribed: isSubscribed ?? this.isSubscribed,

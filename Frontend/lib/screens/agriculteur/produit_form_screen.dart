@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +8,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/error_banner.dart';
 import '../../widgets/modern_button.dart';
 import '../../widgets/modern_text_field.dart';
+import 'abonnement_screen.dart';
 
 class ProduitFormScreen extends StatefulWidget {
   final ProduitModel? produit;
@@ -21,17 +22,30 @@ class ProduitFormScreen extends StatefulWidget {
 }
 
 class _ProduitFormScreenState extends State<ProduitFormScreen> {
+  // Doit rester identique aux listes côté backend
+  // (StoreProduitRequest::CATEGORIES / ::UNITES) — sinon le serveur
+  // rejette une valeur que le formulaire pensait valide.
+  static const List<String> _categories = [
+    'Fruits', 'Légumes', 'Céréales', 'Tubercules', 'Légumineuses', 'Épices & Condiments', 'Autres',
+  ];
+  static const List<String> _unites = [
+    'KG', 'Sac', 'Filet', 'Cageot', 'Tas', 'Botte', 'Caisse', 'Unité (pièce)',
+  ];
+
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nomController;
   late final TextEditingController _descriptionController;
-  late final TextEditingController _categorieController;
   late final TextEditingController _prixController;
   late final TextEditingController _quantiteController;
 
+  String? _categorie;
+  String? _unite;
   String _statut = 'disponible';
   bool _isSaving = false;
   String? _errorMessage;
-  File? _imageSelectionnee;
+
+  XFile? _imageSelectionnee;
+  Uint8List? _imageBytesApercu;
 
   @override
   void initState() {
@@ -39,9 +53,13 @@ class _ProduitFormScreenState extends State<ProduitFormScreen> {
     final p = widget.produit;
     _nomController = TextEditingController(text: p?.nom ?? '');
     _descriptionController = TextEditingController(text: p?.description ?? '');
-    _categorieController = TextEditingController(text: p?.categorie ?? '');
     _prixController = TextEditingController(text: p != null ? p.prix.toStringAsFixed(0) : '');
     _quantiteController = TextEditingController(text: p != null ? p.quantiteDisponible.toString() : '');
+    // Ne pré-remplit que si la valeur existante correspond à une option
+    // connue — un ancien produit avec une catégorie/unité en texte libre
+    // (avant cette mise à jour) repart sur "non choisi" plutôt que planter.
+    _categorie = (p?.categorie != null && _categories.contains(p!.categorie)) ? p.categorie : null;
+    _unite = (p?.unite != null && _unites.contains(p!.unite)) ? p.unite : null;
     _statut = p?.statut ?? 'disponible';
   }
 
@@ -49,7 +67,6 @@ class _ProduitFormScreenState extends State<ProduitFormScreen> {
   void dispose() {
     _nomController.dispose();
     _descriptionController.dispose();
-    _categorieController.dispose();
     _prixController.dispose();
     _quantiteController.dispose();
     super.dispose();
@@ -89,11 +106,60 @@ class _ProduitFormScreenState extends State<ProduitFormScreen> {
     );
 
     if (picked != null && mounted) {
-      setState(() => _imageSelectionnee = File(picked.path));
+      final bytes = await picked.readAsBytes();
+      if (mounted) {
+        setState(() {
+          _imageSelectionnee = picked;
+          _imageBytesApercu = bytes;
+        });
+      }
+    }
+  }
+
+  Future<void> _proposerPremium() async {
+    final aClique = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: const [
+            Icon(Icons.bolt_rounded, color: Color(0xFFFF8F00)),
+            SizedBox(width: 8),
+            Text('Limite atteinte', style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: const Text(
+          'Le forfait gratuit est limité à 2 produits publiés. Passe au premium pour publier sans limite.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Plus tard', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Passer premium'),
+          ),
+        ],
+      ),
+    );
+
+    if (aClique == true && mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const AbonnementScreen()),
+      );
     }
   }
 
   Future<void> _enregistrer() async {
+    // Valide aussi les deux DropdownButtonFormField (ils ont leur propre
+    // validator) — s'ils sont vides, validate() renvoie déjà false ici.
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -104,8 +170,7 @@ class _ProduitFormScreenState extends State<ProduitFormScreen> {
     final provider = context.read<ProduitProvider>();
     final nom = _nomController.text.trim();
     final description = _descriptionController.text.trim();
-    final categorie = _categorieController.text.trim();
-    final prix = double.tryParse(_prixController.text.trim().replaceAll(',', '.')) ?? 0;
+    final prix = int.tryParse(_prixController.text.trim()) ?? 0;
     final quantite = int.tryParse(_quantiteController.text.trim()) ?? 0;
 
     final ok = widget.isEdition
@@ -113,18 +178,20 @@ class _ProduitFormScreenState extends State<ProduitFormScreen> {
             id: widget.produit!.id,
             nom: nom,
             description: description.isEmpty ? null : description,
-            categorie: categorie.isEmpty ? null : categorie,
-            prix: prix,
+            categorie: _categorie,
+            prix: prix.toDouble(),
             quantiteDisponible: quantite,
+            unite: _unite!,
             statut: _statut,
             image: _imageSelectionnee,
           )
         : await provider.creer(
             nom: nom,
             description: description.isEmpty ? null : description,
-            categorie: categorie.isEmpty ? null : categorie,
-            prix: prix,
+            categorie: _categorie,
+            prix: prix.toDouble(),
             quantiteDisponible: quantite,
+            unite: _unite!,
             image: _imageSelectionnee,
           );
 
@@ -134,9 +201,37 @@ class _ProduitFormScreenState extends State<ProduitFormScreen> {
 
     if (ok) {
       Navigator.pop(context);
+    } else if (provider.limitePremiumAtteinte) {
+      _proposerPremium();
     } else {
       setState(() => _errorMessage = provider.errorMessage ?? "Échec de l'enregistrement.");
     }
+  }
+
+  InputDecoration _dropdownDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, color: AppColors.textSecondary, size: 20),
+      filled: true,
+      fillColor: AppColors.inputBg,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: AppColors.inputBorder, width: 1.2),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: AppColors.inputBorder, width: 1.2),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: AppColors.error, width: 1.2),
+      ),
+      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+    );
   }
 
   @override
@@ -171,8 +266,8 @@ class _ProduitFormScreenState extends State<ProduitFormScreen> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      if (_imageSelectionnee != null)
-                        Image.file(_imageSelectionnee!, fit: BoxFit.cover)
+                      if (_imageBytesApercu != null)
+                        Image.memory(_imageBytesApercu!, fit: BoxFit.cover)
                       else if (hasExistingImage)
                         Image.network(widget.produit!.image!, fit: BoxFit.cover)
                       else
@@ -187,7 +282,7 @@ class _ProduitFormScreenState extends State<ProduitFormScreen> {
                             ),
                           ],
                         ),
-                      if (_imageSelectionnee != null || hasExistingImage)
+                      if (_imageBytesApercu != null || hasExistingImage)
                         Positioned(
                           bottom: 10,
                           right: 10,
@@ -210,19 +305,26 @@ class _ProduitFormScreenState extends State<ProduitFormScreen> {
                 validator: (v) => (v == null || v.trim().isEmpty) ? 'Le nom est requis.' : null,
               ),
               const SizedBox(height: 16),
-              ModernTextField(
-                controller: _categorieController,
-                label: 'Catégorie',
-                hintText: 'Ex : Légumes, Fruits, Céréales...',
-                prefixIcon: Icons.category_outlined,
+
+              // Catégorie — liste fermée (avant : texte libre), pour que le
+              // filtre du catalogue reste cohérent (plus de "fruit" vs
+              // "Fruits" vs "fruits").
+              DropdownButtonFormField<String>(
+                value: _categorie,
+                decoration: _dropdownDecoration('Catégorie', Icons.category_outlined),
+                items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                onChanged: (v) => setState(() => _categorie = v),
+                validator: (v) => v == null ? 'Choisis une catégorie.' : null,
               ),
               const SizedBox(height: 16),
+
               ModernTextField(
                 controller: _descriptionController,
                 label: 'Description',
                 prefixIcon: Icons.notes_outlined,
               ),
               const SizedBox(height: 16),
+
               Row(
                 children: [
                   Expanded(
@@ -232,8 +334,11 @@ class _ProduitFormScreenState extends State<ProduitFormScreen> {
                       prefixIcon: Icons.sell_outlined,
                       keyboardType: TextInputType.number,
                       validator: (v) {
-                        final val = double.tryParse((v ?? '').replaceAll(',', '.'));
-                        if (val == null || val < 0) return 'Prix invalide.';
+                        final texte = (v ?? '').trim();
+                        // int.tryParse refuse tout ce qui n'est pas un
+                        // entier pur ("2000.5", "2000,5", lettres...).
+                        final val = int.tryParse(texte);
+                        if (val == null || val < 0) return 'Nombre entier requis.';
                         return null;
                       },
                     ),
@@ -254,6 +359,18 @@ class _ProduitFormScreenState extends State<ProduitFormScreen> {
                   ),
                 ],
               ),
+              const SizedBox(height: 16),
+
+              // Unité — se combine avec "Quantité dispo." ci-dessus pour
+              // donner "50 KG", "2 Cageots", "1 Filet"...
+              DropdownButtonFormField<String>(
+                value: _unite,
+                decoration: _dropdownDecoration('Unité (KG, Sac, Filet...)', Icons.scale_outlined),
+                items: _unites.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
+                onChanged: (v) => setState(() => _unite = v),
+                validator: (v) => v == null ? 'Choisis une unité.' : null,
+              ),
+
               if (widget.isEdition) ...[
                 const SizedBox(height: 16),
                 const Text(

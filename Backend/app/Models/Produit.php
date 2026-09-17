@@ -17,6 +17,7 @@ class Produit extends Model
         'prix',
         'quantite_disponible',
         'image',
+        'unite',
         'statut',
     ];
 

@@ -21,6 +21,8 @@ class UpdateProfileRequest extends FormRequest
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'phone' => ['sometimes', 'nullable', 'string', 'max:30'],
             'email' => ['sometimes', 'required', 'email', Rule::unique('users', 'email')->ignore($userId)],
+            // Vrai fichier envoyé en multipart/form-data (max 4 Mo, jpg/png/webp).
+            'photo' => ['sometimes', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
 
             // Changement de mot de passe optionnel — les 3 champs vont ensemble
             'current_password' => ['required_with:password', 'string'],

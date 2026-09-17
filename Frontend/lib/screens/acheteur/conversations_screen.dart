@@ -5,10 +5,11 @@ import '../../theme/app_theme.dart';
 import '../../widgets/error_banner.dart';
 import 'chat_detail_screen.dart';
 
-/// Onglet "Chat" de l'espace Acheteur — une conversation par livraison en
-/// cours (donc par commande ayant un transporteur assigné). Pas besoin de
-/// provider dédié : on réutilise la liste déjà chargée par l'onglet
-/// "Mes commandes".
+/// Onglet "Messages" de l'espace Acheteur — une conversation par livraison
+/// réellement acceptée par un transporteur (statut en_cours). Avant
+/// acceptation, la livraison reste seulement "proposée" à un transporteur
+/// et n'apparaît pas encore ici. Pas besoin de provider dédié : on
+/// réutilise la liste déjà chargée par l'onglet "Mes commandes".
 class ConversationsScreen extends StatefulWidget {
   const ConversationsScreen({super.key});
 
@@ -29,7 +30,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<AcheteurCommandeProvider>();
     final conversations = provider.commandes
-        .where((c) => c.livraison != null && c.livraison!.transporteurNom != null)
+        .where((c) => c.livraison != null && c.livraison!.statut == 'en_cours' && c.livraison!.transporteurNom != null)
         .toList();
 
     return SafeArea(
@@ -43,12 +44,12 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                 padding: const EdgeInsets.all(20),
                 children: [
                   const Text(
-                    'Chat',
+                    'Messages',
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    'Un transporteur assigné à ta livraison apparaît ici.',
+                    'Un transporteur ayant accepté ta livraison apparaît ici.',
                     style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: 16),

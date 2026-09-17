@@ -17,6 +17,7 @@ class Paiement extends Model
         'methode',
         'statut',
         'reference_api',
+        'duree_mois',
     ];
 
     protected function casts(): array

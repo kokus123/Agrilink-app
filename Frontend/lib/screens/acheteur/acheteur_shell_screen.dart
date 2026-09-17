@@ -44,7 +44,7 @@ class _AcheteurShellScreenState extends State<AcheteurShellScreen> {
           NavigationDestination(
             icon: Icon(Icons.chat_bubble_outline_rounded),
             selectedIcon: Icon(Icons.chat_bubble_rounded),
-            label: 'Chat',
+            label: 'Messages',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline_rounded),
