@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'notchpay' => [
+        'public_key' => env('NOTCHPAY_PUBLIC_KEY'),
+        'webhook_hash' => env('NOTCHPAY_WEBHOOK_HASH'),
+    ],
+
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+    ],
+
 ];

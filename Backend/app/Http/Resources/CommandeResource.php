@@ -22,6 +22,7 @@ class CommandeResource extends JsonResource
                 'id' => $produit->id,
                 'nom' => $produit->nom,
                 'quantite' => $produit->pivot->quantite,
+                'unite' => $produit->unite,
                 'prix_unitaire' => (float) $produit->pivot->prix_unitaire,
                 'agriculteur_id' => $produit->agriculteur?->id,
                 'agriculteur_nom' => $produit->agriculteur?->name,

@@ -2,6 +2,7 @@ class LigneProduitCommande {
   final int id;
   final String nom;
   final int quantite;
+  final String? unite;
   final double prixUnitaire;
   final int? agriculteurId;
   final String? agriculteurNom;
@@ -10,12 +11,18 @@ class LigneProduitCommande {
     required this.id,
     required this.nom,
     required this.quantite,
+    this.unite,
     required this.prixUnitaire,
     this.agriculteurId,
     this.agriculteurNom,
   });
 
   double get sousTotal => prixUnitaire * quantite;
+
+  /// Affichage combiné, ex: "2 Cageots" — retombe sur le nombre seul si
+  /// l'unité n'est pas connue (anciennes commandes).
+  String get quantiteAffichee =>
+      (unite != null && unite!.isNotEmpty) ? '$quantite $unite' : '$quantite';
 
   factory LigneProduitCommande.fromJson(Map<String, dynamic> json) {
     return LigneProduitCommande(
@@ -24,6 +31,7 @@ class LigneProduitCommande {
       quantite: json['quantite'] is int
           ? json['quantite'] as int
           : int.tryParse(json['quantite'].toString()) ?? 0,
+      unite: json['unite'] as String?,
       prixUnitaire: (json['prix_unitaire'] as num?)?.toDouble() ?? 0,
       agriculteurId: json['agriculteur_id'] != null
           ? (json['agriculteur_id'] is int

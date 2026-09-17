@@ -10,8 +10,14 @@ use App\Models\Produit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * Limite du forfait gratuit — nombre max de produits publiés simultanément.
+ * Au-delà, l'agriculteur doit passer premium (voir store()).
+ */
 class AgriculteurProduitController extends Controller
 {
+    private const LIMITE_PRODUITS_GRATUIT = 2;
+
     /**
      * GET /api/mes-produits
      */
@@ -31,15 +37,22 @@ class AgriculteurProduitController extends Controller
      */
     public function store(StoreProduitRequest $request)
     {
+        $user = $request->user();
+
+        if (! $user->is_subscribed && $user->produits()->count() >= self::LIMITE_PRODUITS_GRATUIT) {
+            return response()->json([
+                'message' => 'Le forfait gratuit est limité à '.self::LIMITE_PRODUITS_GRATUIT.' produits publiés. Passe au premium pour publier sans limite.',
+                'limite_atteinte' => true,
+            ], 403);
+        }
+
         $data = $request->validated();
 
         if ($request->hasFile('image')) {
-            // Stocké sur le disque "public" (storage/app/public/produits/...),
-            // accessible ensuite via /storage/produits/... après `php artisan storage:link`.
             $data['image'] = $request->file('image')->store('produits', 'public');
         }
 
-        $produit = $request->user()->produits()->create($data);
+        $produit = $user->produits()->create($data);
 
         return new ProduitResource($produit->load('agriculteur'));
     }
@@ -55,8 +68,6 @@ class AgriculteurProduitController extends Controller
         $data = $request->validated();
 
         if ($request->hasFile('image')) {
-            // Supprime l'ancienne photo avant d'enregistrer la nouvelle,
-            // pour ne pas accumuler des fichiers orphelins sur le disque.
             if ($produit->image) {
                 Storage::disk('public')->delete($produit->image);
             }

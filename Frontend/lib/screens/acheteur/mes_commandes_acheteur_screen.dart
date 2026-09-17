@@ -4,11 +4,13 @@ import '../../models/commande_model.dart';
 import '../../providers/acheteur_commande_provider.dart';
 import '../../providers/notation_provider.dart';
 import '../../providers/position_share_provider.dart';
+import '../../services/livraison_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/error_banner.dart';
 import '../../widgets/modifier_commande_sheet.dart';
 import '../../widgets/rating_dialog.dart';
 import '../../widgets/transporteur_detail_dialog.dart';
+import '../live_map_screen.dart';
 import 'chat_detail_screen.dart';
 
 class MesCommandesAcheteurScreen extends StatelessWidget {
@@ -364,6 +366,26 @@ class _CommandeCard extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.textSecondary,
                     side: const BorderSide(color: AppColors.inputBorder),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  ),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => LiveMapScreen(
+                        titre: 'Position de ${livraison.transporteurNom}',
+                        labelMarqueur: livraison.transporteurNom!,
+                        fetchPosition: () => LivraisonService().getPositionTransporteur(livraison.id),
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Icons.map_outlined, size: 15),
+                  label: const Text('Suivre sur la carte', style: TextStyle(fontSize: 12)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.success,
+                    side: const BorderSide(color: AppColors.success),
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                   ),

@@ -39,6 +39,7 @@ class ApiConfig {
 
   /// Endpoints — Espace Agriculteur
   static String get mesProduitsUrl => '$_baseUrl/mes-produits';
+  static String mesProduitDetailUrl(int produitId) => '$_baseUrl/mes-produits/$produitId';
   static String get mesCommandesUrl => '$_baseUrl/mes-commandes';
   static String notifierTransporteurUrl(int commandeId) =>
       '$_baseUrl/commandes/$commandeId/notifier-transporteur';
@@ -64,6 +65,25 @@ class ApiConfig {
   /// Endpoints — Chat de livraison (commun acheteur/transporteur)
   static String livraisonMessagesUrl(int livraisonId) =>
       '$_baseUrl/livraisons/$livraisonId/messages';
+
+  /// Endpoints — Espace Transporteur (Gérer livraison)
+  static String get livraisonsDisponiblesUrl => '$_baseUrl/livraisons/disponibles';
+  static String get livraisonsPropositionsUrl => '$_baseUrl/livraisons/propositions';
+  static String get livraisonsUrl => '$_baseUrl/livraisons';
+  static String livraisonPrendreEnChargeUrl(int livraisonId) =>
+      '$_baseUrl/livraisons/$livraisonId/prendre-en-charge';
+  static String livraisonAccepterUrl(int livraisonId) =>
+      '$_baseUrl/livraisons/$livraisonId/accepter';
+  static String livraisonRefuserUrl(int livraisonId) =>
+      '$_baseUrl/livraisons/$livraisonId/refuser';
+  static String livraisonStatutUrl(int livraisonId) =>
+      '$_baseUrl/livraisons/$livraisonId/statut';
+  static String livraisonPositionAcheteurUrl(int livraisonId) =>
+      '$_baseUrl/livraisons/$livraisonId/position-acheteur';
+
+  /// Endpoints — Carte temps réel côté Acheteur (position du transporteur)
+  static String livraisonPositionTransporteurUrl(int livraisonId) =>
+      '$_baseUrl/livraisons/$livraisonId/position-transporteur';
 
   /// Endpoints — Paiement (abonnement premium uniquement)
   static String payerPaiementUrl(int paiementId) =>

@@ -65,49 +65,66 @@ class _MesProduitsScreenState extends State<MesProduitsScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<ProduitProvider>();
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: const Text('Ajouter', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const ProduitFormScreen()),
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        floatingActionButton: FloatingActionButton.extended(
+          backgroundColor: AppColors.primary,
+          icon: const Icon(Icons.add_rounded, color: Colors.white),
+          label: const Text('Ajouter', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ProduitFormScreen()),
+          ),
         ),
-      ),
-      body: RefreshIndicator(
-        color: AppColors.primary,
-        onRefresh: () => context.read<ProduitProvider>().charger(),
-        child: provider.isLoading && provider.produits.isEmpty
-            ? const Center(child: CircularProgressIndicator())
-            : ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+        body: RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: () => context.read<ProduitProvider>().charger(),
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+            children: [
+              Row(
                 children: [
-                  if (provider.errorMessage != null) ErrorBanner(message: provider.errorMessage!),
-                  if (provider.produits.isEmpty && !provider.isLoading)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 60),
-                      child: Center(
-                        child: Text(
-                          "Aucun produit pour l'instant.\nAjoute ton premier produit avec le bouton +.",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: AppColors.textSecondary),
-                        ),
-                      ),
+                  const Expanded(
+                    child: Text(
+                      'Mes produits',
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
                     ),
-                  for (final produit in provider.produits)
-                    _ProduitCard(
-                      produit: produit,
-                      onEdit: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => ProduitFormScreen(produit: produit)),
-                      ),
-                      onDelete: () => _confirmerSuppression(context, produit),
-                    ),
+                  ),
                 ],
               ),
+              const SizedBox(height: 16),
+              if (provider.errorMessage != null) ErrorBanner(message: provider.errorMessage!),
+              if (provider.isLoading && provider.produits.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 40),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (provider.produits.isEmpty && !provider.isLoading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 60),
+                  child: Center(
+                    child: Text(
+                      "Aucun produit pour l'instant.\nAjoute ton premier produit avec le bouton +.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                  ),
+                )
+              else
+                for (final produit in provider.produits)
+                  _ProduitCard(
+                    produit: produit,
+                    onEdit: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => ProduitFormScreen(produit: produit)),
+                    ),
+                    onDelete: () => _confirmerSuppression(context, produit),
+                  ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -146,7 +163,6 @@ class _ProduitCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Vraie photo du produit (ou repli sur une icône si aucune image)
           ClipRRect(
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(18),
@@ -159,7 +175,7 @@ class _ProduitCard extends StatelessWidget {
                   ? Image.network(
                       produit.image!,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
+                      errorBuilder: (_, _, _) => Container(
                         color: AppColors.surfaceMuted,
                         child: const Icon(Icons.image_not_supported_outlined, color: AppColors.textMuted),
                       ),

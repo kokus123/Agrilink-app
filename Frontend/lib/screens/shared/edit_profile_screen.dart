@@ -142,7 +142,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 contentPadding: EdgeInsets.zero,
                 value: _changerMotDePasse,
                 onChanged: (v) => setState(() => _changerMotDePasse = v),
-                activeColor: AppColors.primary,
+                activeThumbColor: AppColors.primary,
                 title: const Text('Changer le mot de passe', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
               ),
 

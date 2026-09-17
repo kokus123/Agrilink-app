@@ -3,24 +3,26 @@ import 'api_service.dart';
 
 class RevenusSimules {
   final double revenuPotentielStockActuel;
-  final double revenuReel3DerniersMois;
+  final double revenuReelEstime;
   final int nombreProduitsActifs;
+  final String explication;
 
   const RevenusSimules({
     required this.revenuPotentielStockActuel,
-    required this.revenuReel3DerniersMois,
+    required this.revenuReelEstime,
     required this.nombreProduitsActifs,
+    required this.explication,
   });
 
   factory RevenusSimules.fromJson(Map<String, dynamic> json) {
     return RevenusSimules(
       revenuPotentielStockActuel:
           (json['revenu_potentiel_stock_actuel'] as num?)?.toDouble() ?? 0,
-      revenuReel3DerniersMois:
-          (json['revenu_reel_3_derniers_mois'] as num?)?.toDouble() ?? 0,
+      revenuReelEstime: (json['revenu_reel_estime'] as num?)?.toDouble() ?? 0,
       nombreProduitsActifs: json['nombre_produits_actifs'] is int
           ? json['nombre_produits_actifs'] as int
           : int.tryParse(json['nombre_produits_actifs'].toString()) ?? 0,
+      explication: json['explication'] as String? ?? '',
     );
   }
 }
@@ -30,6 +32,7 @@ class PredictionPrix {
   final double prixMoyenMarche;
   final double prixMin;
   final double prixMax;
+  final String tendance;
   final int echantillon;
   final String note;
 
@@ -38,6 +41,7 @@ class PredictionPrix {
     required this.prixMoyenMarche,
     required this.prixMin,
     required this.prixMax,
+    required this.tendance,
     required this.echantillon,
     required this.note,
   });
@@ -48,6 +52,7 @@ class PredictionPrix {
       prixMoyenMarche: (json['prix_moyen_marche'] as num?)?.toDouble() ?? 0,
       prixMin: (json['prix_min'] as num?)?.toDouble() ?? 0,
       prixMax: (json['prix_max'] as num?)?.toDouble() ?? 0,
+      tendance: json['tendance'] as String? ?? 'stable',
       echantillon: json['echantillon'] is int
           ? json['echantillon'] as int
           : int.tryParse(json['echantillon'].toString()) ?? 0,

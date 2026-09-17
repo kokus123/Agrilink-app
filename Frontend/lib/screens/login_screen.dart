@@ -6,10 +6,13 @@ import '../widgets/auth_illustration.dart';
 import '../widgets/error_banner.dart';
 import '../widgets/flat_action_button.dart';
 import '../widgets/modern_text_field.dart';
-import '../widgets/server_config_dialog.dart';
 import '../widgets/social_login_button.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
+
+/// Vert tiré de l'illustration login_screen.png — appliqué au bouton
+/// principal pour que la couleur ne se perde pas entre l'image et l'UI.
+const _kCouleurIllustration = Color(0xFF4CBB6C);
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -104,11 +107,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         color: Colors.white,
                         shape: BoxShape.circle,
                         border: Border.all(color: AppColors.inputBorder),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.tune_rounded, color: AppColors.primary, size: 20),
-                        tooltip: 'Configuration du serveur API',
-                        onPressed: () => ServerConfigDialog.show(context),
                       ),
                     ),
                   ],
@@ -223,6 +221,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   text: 'Se connecter',
                   isLoading: authProvider.isLoading,
                   onPressed: _handleLogin,
+                  color: _kCouleurIllustration,
                 ),
                 const SizedBox(height: 24),
 

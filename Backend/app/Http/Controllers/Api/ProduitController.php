@@ -5,13 +5,19 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProduitResource;
 use App\Models\Produit;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class ProduitController extends Controller
 {
     /**
      * GET /api/produits
-     * Catalogue avec recherche et filtres (Rechercher produit, Gerer catalogue)
+     * Catalogue avec recherche et filtres (Rechercher produit, Gerer catalogue).
+     *
+     * "Booster le profil" (avantage premium) : les produits d'un agriculteur
+     * abonné apparaissent en priorité, avant ceux des comptes gratuits — à
+     * filtres/recherche égaux, ce n'est pas un remplacement du tri par
+     * pertinence mais une priorité appliquée par-dessus.
      */
     public function index(Request $request)
     {
@@ -26,6 +32,10 @@ class ProduitController extends Controller
             ->when($request->prix_max, function ($query, $prixMax) {
                 $query->where('prix', '<=', $prixMax);
             })
+            ->orderByDesc(
+                User::select('is_subscribed')
+                    ->whereColumn('users.id', 'produits.agriculteur_id')
+            )
             ->latest()
             ->paginate(20);
 

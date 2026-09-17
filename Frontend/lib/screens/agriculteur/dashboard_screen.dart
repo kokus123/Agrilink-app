@@ -73,6 +73,28 @@ class _AgriculteurDashboardScreenState extends State<AgriculteurDashboardScreen>
     }
   }
 
+  Color _couleurTendance(String tendance) {
+    switch (tendance.toLowerCase()) {
+      case 'hausse':
+        return AppColors.success;
+      case 'baisse':
+        return AppColors.error;
+      default:
+        return AppColors.warning;
+    }
+  }
+
+  IconData _iconeTendance(String tendance) {
+    switch (tendance.toLowerCase()) {
+      case 'hausse':
+        return Icons.trending_up_rounded;
+      case 'baisse':
+        return Icons.trending_down_rounded;
+      default:
+        return Icons.trending_flat_rounded;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
@@ -84,9 +106,15 @@ class _AgriculteurDashboardScreenState extends State<AgriculteurDashboardScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Simuler mes revenus',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+            Row(
+              children: [
+                const Text(
+                  'Simuler mes revenus',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                ),
+                const SizedBox(width: 8),
+                const _BadgeIA(),
+              ],
             ),
             const SizedBox(height: 12),
             if (_errorRevenus != null) ErrorBanner(message: _errorRevenus!),
@@ -101,8 +129,8 @@ class _AgriculteurDashboardScreenState extends State<AgriculteurDashboardScreen>
               const SizedBox(height: 12),
               _StatCard(
                 icon: Icons.trending_up_rounded,
-                label: 'Revenu réel (3 derniers mois)',
-                value: '${_revenus!.revenuReel3DerniersMois.toStringAsFixed(0)} FCFA',
+                label: 'Revenu réaliste estimé',
+                value: '${_revenus!.revenuReelEstime.toStringAsFixed(0)} FCFA',
               ),
               const SizedBox(height: 12),
               _StatCard(
@@ -110,11 +138,26 @@ class _AgriculteurDashboardScreenState extends State<AgriculteurDashboardScreen>
                 label: 'Produits actifs',
                 value: '${_revenus!.nombreProduitsActifs}',
               ),
+              if (_revenus!.explication.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                _EncartExplicationIA(texte: _revenus!.explication),
+              ],
             ],
             const SizedBox(height: 32),
+            Row(
+              children: [
+                const Text(
+                  'Prédiction de prix par catégorie',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                ),
+                const SizedBox(width: 8),
+                const _BadgeIA(),
+              ],
+            ),
+            const SizedBox(height: 4),
             const Text(
-              'Prédiction de prix par catégorie',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+              'Estimation pour la semaine à venir',
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 12),
             ModernTextField(
@@ -144,26 +187,99 @@ class _AgriculteurDashboardScreenState extends State<AgriculteurDashboardScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      _prediction!.categorie,
-                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: AppColors.textPrimary),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _prediction!.categorie,
+                            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: AppColors.textPrimary),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: _couleurTendance(_prediction!.tendance).withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(_iconeTendance(_prediction!.tendance), size: 13, color: _couleurTendance(_prediction!.tendance)),
+                              const SizedBox(width: 4),
+                              Text(
+                                _prediction!.tendance,
+                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _couleurTendance(_prediction!.tendance)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 8),
                     Text('Prix moyen : ${_prediction!.prixMoyenMarche.toStringAsFixed(0)} FCFA'),
                     Text(
                       'Fourchette : ${_prediction!.prixMin.toStringAsFixed(0)} — ${_prediction!.prixMax.toStringAsFixed(0)} FCFA',
                     ),
-                    Text('Échantillon : ${_prediction!.echantillon} produit(s)'),
+                    Text('Échantillon : ${_prediction!.echantillon} produit(s) sur la plateforme'),
                     const SizedBox(height: 8),
-                    Text(
-                      _prediction!.note,
-                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontStyle: FontStyle.italic),
-                    ),
+                    if (_prediction!.note.isNotEmpty) _EncartExplicationIA(texte: _prediction!.note),
                   ],
                 ),
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _BadgeIA extends StatelessWidget {
+  const _BadgeIA();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        gradient: AppColors.brandGradient,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.auto_awesome_rounded, size: 11, color: Colors.white),
+          SizedBox(width: 3),
+          Text('IA', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white)),
+        ],
+      ),
+    );
+  }
+}
+
+class _EncartExplicationIA extends StatelessWidget {
+  final String texte;
+  const _EncartExplicationIA({required this.texte});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.successBg,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.auto_awesome_rounded, size: 16, color: AppColors.success),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              texte,
+              style: const TextStyle(fontSize: 12.5, color: AppColors.textPrimary, height: 1.4),
+            ),
+          ),
+        ],
       ),
     );
   }

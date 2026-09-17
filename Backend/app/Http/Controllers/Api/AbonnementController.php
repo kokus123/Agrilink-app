@@ -5,41 +5,38 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Paiement;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class AbonnementController extends Controller
 {
+    /** Forfait Premium unique — FCFA par mois. */
+    private const TARIF_PREMIUM = 5000;
+
     /**
      * POST /api/abonnement/souscrire
-     * Initie une souscription premium. Le statut réel du paiement sera confirmé
-     * par le webhook de l'API de paiement (Phase 4 de la feuille de route).
+     * Crée le paiement en attente pour 1 mois de Premium. Le client doit
+     * ensuite appeler POST /api/paiements/{id}/payer pour déclencher le
+     * Mobile Money. L'activation réelle (is_subscribed = true) se fait
+     * uniquement via PaiementWebhookController, jamais ici.
      */
     public function souscrire(Request $request)
     {
         $validated = $request->validate([
-            'duree_mois' => ['required', Rule::in([1, 3, 6, 12])],
             'methode' => ['required', 'string'],
         ]);
-
-        $tarifs = [1 => 2000, 3 => 5500, 6 => 10000, 12 => 18000]; // FCFA, à ajuster
-        $montant = $tarifs[$validated['duree_mois']];
 
         $paiement = Paiement::create([
             'user_id' => $request->user()->id,
             'type' => 'abonnement',
-            'montant' => $montant,
+            'montant' => self::TARIF_PREMIUM,
             'methode' => $validated['methode'],
             'statut' => 'en_attente',
+            'duree_mois' => 1,
         ]);
-
-        // NOTE : l'activation réelle (is_subscribed = true) se fera via le webhook
-        // de confirmation de paiement, pas ici directement — pour éviter d'activer
-        // un abonnement qui n'a pas été payé.
 
         return response()->json([
             'message' => 'Souscription initiée, en attente de confirmation du paiement.',
             'paiement_id' => $paiement->id,
-            'montant' => $montant,
+            'montant' => self::TARIF_PREMIUM,
         ], 201);
     }
 

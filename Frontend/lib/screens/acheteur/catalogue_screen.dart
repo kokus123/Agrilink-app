@@ -5,6 +5,7 @@ import '../../providers/cart_provider.dart';
 import '../../providers/catalogue_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/error_banner.dart';
+import '../../widgets/premium_star_badge.dart';
 import 'panier_screen.dart';
 
 class CatalogueScreen extends StatefulWidget {
@@ -123,7 +124,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               scrollDirection: Axis.horizontal,
               itemCount: _categories.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
                 final categorie = _categories[index];
                 final active = categorie == catalogue.categorieActive;
@@ -234,7 +235,7 @@ class _ProduitCard extends StatelessWidget {
                 ? Image.network(
                     produit.image!,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _placeholderImage(),
+                    errorBuilder: (_, _, _) => _placeholderImage(),
                     loadingBuilder: (context, child, progress) =>
                         progress == null ? child : _placeholderImage(loading: true),
                   )
@@ -264,6 +265,10 @@ class _ProduitCard extends StatelessWidget {
                         style: const TextStyle(fontSize: 10, color: AppColors.textMuted),
                       ),
                     ),
+                    if (produit.agriculteurEstPremium) ...[
+                      const SizedBox(width: 3),
+                      const PremiumStarBadge(size: 11),
+                    ],
                   ],
                 ),
                 const SizedBox(height: 8),

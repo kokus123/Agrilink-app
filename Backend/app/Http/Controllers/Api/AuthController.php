@@ -10,6 +10,7 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -88,8 +89,9 @@ class AuthController extends Controller
 
     /**
      * PATCH /api/me
-     * "Gérer son profil" — commun aux 4 rôles. Le changement de mot de passe
-     * est optionnel et nécessite le mot de passe actuel.
+     * "Gérer son profil" — commun aux 4 rôles. Accepte multipart/form-data
+     * si une photo est envoyée, sinon un body JSON classique fonctionne
+     * aussi (Laravel gère les deux de la même façon côté validation).
      */
     public function updateProfile(UpdateProfileRequest $request)
     {
@@ -103,6 +105,13 @@ class AuthController extends Controller
                 ]);
             }
             $user->password = Hash::make($validated['password']);
+        }
+
+        if ($request->hasFile('photo')) {
+            if ($user->photo) {
+                Storage::disk('public')->delete($user->photo);
+            }
+            $user->photo = $request->file('photo')->store('profils', 'public');
         }
 
         $user->fill(collect($validated)->only(['name', 'phone', 'email'])->toArray());

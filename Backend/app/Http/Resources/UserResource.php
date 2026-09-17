@@ -14,6 +14,10 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
+            // Passe par /api/media/ (MediaController) plutôt que le lien
+            // statique storage/ direct — voir MediaController.php pour la
+            // raison (CORS avec php artisan serve).
+            'photo' => $this->photo ? url('/api/media/'.$this->photo) : null,
             'role' => $this->role,
             'is_active' => $this->is_active,
             'is_subscribed' => $this->is_subscribed,

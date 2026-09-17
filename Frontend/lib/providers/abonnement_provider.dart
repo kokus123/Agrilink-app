@@ -40,17 +40,14 @@ class AbonnementProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> souscrire({required int dureeMois, required String methode}) async {
+  Future<bool> souscrire() async {
     _isLoading = true;
     _errorMessage = null;
     _infoMessage = null;
     notifyListeners();
 
     try {
-      final paiementId = await _abonnementService.souscrire(
-        dureeMois: dureeMois,
-        methode: methode,
-      );
+      final paiementId = await _abonnementService.souscrire(methode: 'mobile_money');
       _paiementEnAttenteId = paiementId;
       _isLoading = false;
       notifyListeners();

@@ -8,11 +8,16 @@ class ApiException implements Exception {
   final String message;
   final int? statusCode;
   final Map<String, List<String>>? validationErrors;
+  /// Corps brut décodé de la réponse d'erreur — utile pour détecter des
+  /// indicateurs métier précis (ex: {"limite_atteinte": true}) sans avoir
+  /// à ajouter un champ dédié à ApiException à chaque nouveau cas.
+  final Map<String, dynamic>? body;
 
   ApiException({
     required this.message,
     this.statusCode,
     this.validationErrors,
+    this.body,
   });
 
   /// Retourne un message lisible combinant les erreurs de validation s'il y en a
@@ -207,6 +212,13 @@ class ApiService {
 
   /// Requête multipart/form-data (upload de fichier, ex: photo produit).
   ///
+  /// On travaille en octets bruts ([fileBytes]) plutôt qu'avec un `File`
+  /// (dart:io) — `File` ne fonctionne PAS sur Flutter Web (pas d'accès
+  /// disque dans un navigateur), alors que des octets lus via
+  /// `XFile.readAsBytes()` marchent identiquement sur web, mobile et
+  /// desktop. C'est à l'appelant de lire les octets avant d'appeler cette
+  /// méthode.
+  ///
   /// Laravel ne lit les fichiers ($_FILES) que sur de vraies requêtes HTTP
   /// POST — pour simuler un PATCH avec fichier, on envoie donc un POST
   /// avec un champ `_method=PATCH` (mécanisme standard de Laravel pour les
@@ -215,7 +227,8 @@ class ApiService {
     String url, {
     required String method, // 'POST' ou 'PATCH'
     Map<String, String>? fields,
-    File? file,
+    List<int>? fileBytes,
+    String fileName = 'upload.jpg',
     String fileFieldName = 'image',
     bool requiresAuth = false,
   }) async {
@@ -233,8 +246,12 @@ class ApiService {
       }
       request.fields.addAll(allFields);
 
-      if (file != null) {
-        request.files.add(await http.MultipartFile.fromPath(fileFieldName, file.path));
+      if (fileBytes != null) {
+        request.files.add(http.MultipartFile.fromBytes(
+          fileFieldName,
+          fileBytes,
+          filename: fileName,
+        ));
       }
 
       final streamedResponse = await request.send().timeout(timeoutDuration);
@@ -301,6 +318,7 @@ class ApiService {
         message: message,
         statusCode: 422,
         validationErrors: validationErrors,
+        body: body,
       );
     }
 
@@ -309,6 +327,7 @@ class ApiService {
       throw ApiException(
         message: body['message'] as String? ?? 'Non authentifié. Veuillez vous reconnecter.',
         statusCode: 401,
+        body: body,
       );
     }
 
@@ -317,6 +336,7 @@ class ApiService {
       throw ApiException(
         message: body['message'] as String? ?? 'Accès refusé.',
         statusCode: 403,
+        body: body,
       );
     }
 
@@ -325,6 +345,7 @@ class ApiService {
       throw ApiException(
         message: 'Ressource introuvable sur le serveur (404).',
         statusCode: 404,
+        body: body,
       );
     }
 
@@ -333,6 +354,7 @@ class ApiService {
       throw ApiException(
         message: body['message'] as String? ?? 'Conflit : action déjà effectuée.',
         statusCode: 409,
+        body: body,
       );
     }
 
@@ -342,6 +364,7 @@ class ApiService {
     throw ApiException(
       message: fallbackMsg,
       statusCode: response.statusCode,
+      body: body,
     );
   }
 }

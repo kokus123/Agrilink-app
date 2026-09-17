@@ -28,4 +28,19 @@ class ProfileService {
       requiresAuth: true,
     );
   }
+
+  /// Upload immédiat de la photo de profil (tap sur l'avatar). Prend des
+  /// octets bruts plutôt qu'un `File` — `File` (dart:io) ne fonctionne pas
+  /// sur Flutter Web, alors que des octets lus via `XFile.readAsBytes()`
+  /// marchent sur toutes les plateformes.
+  Future<void> uploaderPhoto(List<int> photoBytes, {String fileName = 'profil.jpg'}) async {
+    await _api.multipart(
+      ApiConfig.meUrl,
+      method: 'PATCH',
+      fileBytes: photoBytes,
+      fileName: fileName,
+      fileFieldName: 'photo',
+      requiresAuth: true,
+    );
+  }
 }

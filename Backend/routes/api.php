@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AgriculteurStatsController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CommandeController;
 use App\Http\Controllers\Api\LivraisonController;
+use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\NotationController;
 use App\Http\Controllers\Api\PaiementController;
@@ -30,10 +31,13 @@ Route::get('/agriculteurs/{agriculteur}/notations', [NotationController::class, 
 
 Route::post('/webhooks/notchpay', [PaiementWebhookController::class, 'handle']);
 
+Route::get('/media/{path}', [MediaController::class, 'show'])->where('path', '.*');
+
 // --- Routes protégées ---
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    Route::patch('/me', [AuthController::class, 'updateProfile']);
 
     Route::post('/paiements/{paiement}/payer', [PaiementController::class, 'payer']);
 
@@ -46,6 +50,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/commandes/{commande}', [CommandeController::class, 'destroy']);
 
         Route::post('/notations', [NotationController::class, 'store']);
+
+        // Carte temps réel : position du transporteur pendant une livraison
+        Route::get('/livraisons/{livraison}/position-transporteur', [LivraisonController::class, 'positionTransporteur']);
     });
 
     // --- Agriculteur uniquement ---
@@ -66,8 +73,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // --- Transporteur uniquement ---
     Route::middleware('role.api:transporteur')->group(function () {
         Route::get('/livraisons/disponibles', [LivraisonController::class, 'disponibles']);
+        Route::get('/livraisons/propositions', [LivraisonController::class, 'propositions']);
         Route::get('/livraisons', [LivraisonController::class, 'index']);
         Route::patch('/livraisons/{livraison}/prendre-en-charge', [LivraisonController::class, 'prendreEnCharge']);
+        Route::patch('/livraisons/{livraison}/accepter', [LivraisonController::class, 'accepter']);
+        Route::patch('/livraisons/{livraison}/refuser', [LivraisonController::class, 'refuser']);
         Route::patch('/livraisons/{livraison}/statut', [LivraisonController::class, 'updateStatut']);
         Route::get('/livraisons/{livraison}/position-acheteur', [LivraisonController::class, 'positionAcheteur']);
     });

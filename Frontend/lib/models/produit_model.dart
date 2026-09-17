@@ -5,11 +5,13 @@ class ProduitModel {
   final String? categorie;
   final double prix;
   final int quantiteDisponible;
+  final String? unite;
   final String? image;
   final String statut;
   final int? agriculteurId;
   final String? agriculteurName;
   final double? agriculteurMoyenneNote;
+  final bool agriculteurEstPremium;
   final DateTime? createdAt;
 
   const ProduitModel({
@@ -19,15 +21,23 @@ class ProduitModel {
     this.categorie,
     required this.prix,
     required this.quantiteDisponible,
+    this.unite,
     this.image,
     required this.statut,
     this.agriculteurId,
     this.agriculteurName,
     this.agriculteurMoyenneNote,
+    this.agriculteurEstPremium = false,
     this.createdAt,
   });
 
   bool get estDisponible => statut == 'disponible';
+
+  /// Affichage combiné, ex: "50 KG", "2 Cageots" — retombe sur le nombre
+  /// seul si aucune unité n'est connue (anciens produits créés avant
+  /// l'ajout de cette fonctionnalité).
+  String get quantiteAffichee =>
+      (unite != null && unite!.isNotEmpty) ? '$quantiteDisponible $unite' : '$quantiteDisponible';
 
   String get statutLabel {
     switch (statut) {
@@ -54,11 +64,13 @@ class ProduitModel {
       quantiteDisponible: json['quantite_disponible'] is int
           ? json['quantite_disponible'] as int
           : int.tryParse(json['quantite_disponible'].toString()) ?? 0,
+      unite: json['unite'] as String?,
       image: json['image'] as String?,
       statut: json['statut'] as String? ?? 'disponible',
       agriculteurId: agriculteur?['id'] is int ? agriculteur!['id'] as int : null,
       agriculteurName: agriculteur?['name'] as String?,
       agriculteurMoyenneNote: (agriculteur?['moyenne_note'] as num?)?.toDouble(),
+      agriculteurEstPremium: agriculteur?['is_subscribed'] == true,
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'].toString())
           : null,
