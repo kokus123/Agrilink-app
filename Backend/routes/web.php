@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\Route;
 // Redirige simplement vers la page de connexion pour l'instant.
 Route::redirect('/', '/login')->name('home');
 
+// Après connexion, Fortify redirige vers /dashboard : on l'envoie vers l'admin.
+Route::redirect('/dashboard', '/admin')->middleware('auth')->name('dashboard');
+
 // ============================================================
 // Routes Admin (AGRILINK)
 // ============================================================
