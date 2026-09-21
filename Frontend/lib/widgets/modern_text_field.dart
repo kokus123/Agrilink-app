@@ -36,16 +36,8 @@ class ModernTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-            letterSpacing: 0.2,
-          ),
-        ),
-        const SizedBox(height: 7),
+        Text(label, style: AppTextStyles.fieldLabel),
+        const SizedBox(height: AppSpacing.sm),
         TextFormField(
           controller: controller,
           obscureText: obscureText,
@@ -76,11 +68,11 @@ class ModernTextField extends StatelessWidget {
             filled: true,
             fillColor: AppColors.inputBg,
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 16,
+              horizontal: AppSpacing.base,
+              vertical: AppSpacing.base,
             ),
             prefixIcon: Padding(
-              padding: const EdgeInsets.only(left: 14, right: 10),
+              padding: const EdgeInsets.only(left: 14, right: AppSpacing.sm),
               child: Icon(
                 prefixIcon,
                 color: AppColors.textSecondary,
@@ -93,26 +85,23 @@ class ModernTextField extends StatelessWidget {
             ),
             suffixIcon: suffixIcon,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: AppRadius.mediumRadius,
               borderSide: const BorderSide(color: AppColors.inputBorder, width: 1.2),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: AppRadius.mediumRadius,
               borderSide: const BorderSide(color: AppColors.inputBorder, width: 1.2),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(
-                color: AppColors.primary,
-                width: 2,
-              ),
+              borderRadius: AppRadius.mediumRadius,
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
             ),
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: AppRadius.mediumRadius,
               borderSide: const BorderSide(color: AppColors.error, width: 1.2),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: AppRadius.mediumRadius,
               borderSide: const BorderSide(color: AppColors.error, width: 2),
             ),
           ),

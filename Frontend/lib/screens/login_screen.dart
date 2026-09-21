@@ -10,10 +10,6 @@ import '../widgets/social_login_button.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
 
-/// Vert tiré de l'illustration login_screen.png — appliqué au bouton
-/// principal pour que la couleur ne se perde pas entre l'image et l'UI.
-const _kCouleurIllustration = Color(0xFF4CBB6C);
-
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -93,52 +89,35 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.xl,
+            AppSpacing.xl,
+            AppSpacing.xl,
+            AppSpacing.xl,
+          ),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.inputBorder),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-
                 const AuthIllustration(
                   centerIcon: Icons.eco_rounded,
                   imagePath: 'assets/images/login_screen.png',
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
 
                 const Text(
                   'Bienvenue sur AgriLink',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  ),
+                  style: AppTextStyles.displayLarge,
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: AppSpacing.xs),
                 const Text(
                   'Connectez-vous pour continuer',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: AppTextStyles.bodySecondary,
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: AppSpacing.xl),
 
                 if (authProvider.errorMessage != null)
                   ErrorBanner(
@@ -164,7 +143,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.base),
 
                 ModernTextField(
                   controller: _passwordController,
@@ -196,7 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
 
                 Align(
                   alignment: Alignment.centerRight,
@@ -215,21 +194,21 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.md),
 
                 FlatActionButton(
                   text: 'Se connecter',
                   isLoading: authProvider.isLoading,
                   onPressed: _handleLogin,
-                  color: _kCouleurIllustration,
+                  color: AppColors.primary,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
 
                 Row(
                   children: [
                     const Expanded(child: Divider(color: AppColors.inputBorder)),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                       child: Text(
                         'OU',
                         style: TextStyle(
@@ -242,7 +221,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Expanded(child: Divider(color: AppColors.inputBorder)),
                   ],
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.lg),
 
                 SocialLoginButton(
                   label: 'Continuer avec Google',
@@ -252,7 +231,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   border: AppColors.inputBorder,
                   onTap: () => _showComingSoon('La connexion avec Google'),
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: AppSpacing.xl),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,

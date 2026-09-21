@@ -16,6 +16,7 @@ return new class extends Migration
                 'en_attente',
                 'en_cours',
                 'livree',
+                'proposee',
                 'annulee',
             ])->default('en_attente');
             $table->decimal('latitude_actuelle', 10, 7)->nullable();

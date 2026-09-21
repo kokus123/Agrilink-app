@@ -26,7 +26,6 @@ class FlatActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isEnabled = onPressed != null && !isLoading;
-    final radius = height / 2;
 
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 200),
@@ -34,50 +33,35 @@ class FlatActionButton extends StatelessWidget {
       child: Container(
         height: height,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(radius),
-          boxShadow: isEnabled
-              ? [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.35),
-                    blurRadius: 18,
-                    offset: const Offset(0, 8),
-                  ),
-                ]
-              : [],
+          borderRadius: AppRadius.pill,
+          boxShadow: isEnabled ? AppShadows.glow(color) : [],
         ),
         child: Material(
           color: color,
-          borderRadius: BorderRadius.circular(radius),
+          borderRadius: AppRadius.pill,
           child: InkWell(
             onTap: isEnabled ? onPressed : null,
-            borderRadius: BorderRadius.circular(radius),
+            borderRadius: AppRadius.pill,
             child: Center(
               child: isLoading
                   ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
                   : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (icon != null) ...[
-                          Icon(icon, color: Colors.white, size: 20),
-                          const SizedBox(width: 8),
-                        ],
-                        Text(
-                          text,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, color: Colors.white, size: 20),
+                    const SizedBox(width: AppSpacing.sm),
+                  ],
+                  Text(text, style: AppTextStyles.buttonLabel),
+                ],
+              ),
             ),
           ),
         ),

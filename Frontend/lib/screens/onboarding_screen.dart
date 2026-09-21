@@ -197,20 +197,32 @@ class _SlideBackground extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.asset(slide.image, fit: BoxFit.cover),
+        Positioned.fill(
+          child: Image.asset(
+            slide.image,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => Container(
+              color: Colors.black87,
+              alignment: Alignment.center,
+              child: const Icon(Icons.image_not_supported_outlined, color: Colors.white54, size: 40),
+            ),
+          ),
+        ),
         // Dégradé sombre du bas vers le haut — garde le texte blanc
         // lisible quelle que soit la photo derrière.
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.transparent,
-                Colors.black.withValues(alpha: 0.15),
-                Colors.black.withValues(alpha: 0.85),
-              ],
-              stops: const [0.0, 0.45, 1.0],
+        const Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Color(0x26000000),
+                  Color(0xD9000000),
+                ],
+                stops: [0.0, 0.45, 1.0],
+              ),
             ),
           ),
         ),

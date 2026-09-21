@@ -10,11 +10,6 @@ import '../widgets/role_selector_card.dart';
 import '../widgets/social_login_button.dart';
 import 'home_screen.dart';
 
-/// Vert tiré de l'illustration register_screen.png — même teinte que
-/// login_screen.dart (même illustration), pour que le bouton reste
-/// cohérent avec l'image au-dessus.
-const _kCouleurIllustration = Color(0xFF4CBB6C);
-
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -97,7 +92,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const HomeScreen()),
-        (route) => false,
+            (route) => false,
       );
     }
   }
@@ -110,66 +105,54 @@ class _RegisterScreenState extends State<RegisterScreen> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.xl,
+            AppSpacing.md,
+            AppSpacing.xl,
+            AppSpacing.xl,
+          ),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.inputBorder),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary, size: 20),
-                        onPressed: () {
-                          authProvider.clearErrors();
-                          Navigator.pop(context);
-                        },
-                      ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.inputBorder),
                     ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.inputBorder),
-                      ),
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary, size: 20),
+                      onPressed: () {
+                        authProvider.clearErrors();
+                        Navigator.pop(context);
+                      },
                     ),
-                  ],
+                  ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.xs),
 
                 const AuthIllustration(
                   centerIcon: Icons.person_add_alt_1_rounded,
                   imagePath: 'assets/images/register_screen.png',
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: AppSpacing.lg),
 
                 const Text(
                   'Créer un compte',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  ),
+                  style: AppTextStyles.displayLarge,
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: AppSpacing.xs),
                 const Text(
                   'Rejoignez AgriLink dès maintenant',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: AppTextStyles.bodySecondary,
                 ),
-                const SizedBox(height: 26),
+                const SizedBox(height: AppSpacing.xl),
 
                 const Text(
                   'Vous êtes',
@@ -179,7 +162,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     color: AppColors.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [
                     RoleSelectorCard(
@@ -196,7 +179,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         });
                       },
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppSpacing.md),
                     RoleSelectorCard(
                       title: 'Acheteur',
                       badgeText: 'Client',
@@ -213,7 +196,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: AppSpacing.xl),
 
                 if (authProvider.errorMessage != null)
                   ErrorBanner(
@@ -235,7 +218,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: AppSpacing.md),
 
                 ModernTextField(
                   controller: _emailController,
@@ -255,7 +238,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: AppSpacing.md),
 
                 ModernTextField(
                   controller: _phoneController,
@@ -266,7 +249,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   textInputAction: TextInputAction.next,
                   errorText: authProvider.getFieldError('phone'),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: AppSpacing.md),
 
                 ModernTextField(
                   controller: _passwordController,
@@ -300,7 +283,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: AppSpacing.md),
 
                 ModernTextField(
                   controller: _passwordConfirmController,
@@ -335,21 +318,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
 
                 FlatActionButton(
                   text: 'Créer mon compte',
                   isLoading: authProvider.isLoading,
                   onPressed: _handleRegister,
-                  color: _kCouleurIllustration,
+                  color: AppColors.primary,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
 
                 Row(
                   children: [
                     const Expanded(child: Divider(color: AppColors.inputBorder)),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                       child: Text(
                         'OU',
                         style: TextStyle(
@@ -362,7 +345,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const Expanded(child: Divider(color: AppColors.inputBorder)),
                   ],
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.lg),
 
                 SocialLoginButton(
                   label: "S'inscrire avec Google",
@@ -372,7 +355,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   border: AppColors.inputBorder,
                   onTap: () => _showComingSoon("L'inscription avec Google"),
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: AppSpacing.xl),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
